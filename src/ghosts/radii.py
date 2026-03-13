@@ -50,7 +50,7 @@ def compute_rho_from_delta(
     """Compute rho = pi/delta with consistent edge handling."""
     if torch.is_tensor(delta):
         if inf_if_small:
-            rho = torch.where(delta < eps, torch.tensor(float("inf"), device=delta.device), PI / (delta + eps))
+            rho = torch.where(delta <= eps, torch.tensor(float("inf"), device=delta.device), PI / (delta + eps))
         else:
             rho = PI / (delta + eps)
         if cap is not None:
@@ -59,7 +59,7 @@ def compute_rho_from_delta(
             rho = torch.clamp(rho, min=floor)
         return rho
 
-    if inf_if_small and delta < eps:
+    if inf_if_small and delta <= eps:
         return float("inf")
     rho = PI / (delta + eps)
     if cap is not None:
