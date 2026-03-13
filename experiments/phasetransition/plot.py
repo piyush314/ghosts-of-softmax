@@ -43,7 +43,7 @@ plt.rcParams.update({
 })
 
 # === LOAD DATA ===
-datapath = Path(__file__).parent.parent / "figures/ghosts_softmax"
+datapath = Path(__file__).resolve().parent / "results"
 data = np.load(datapath / "exp7b_rho_deltamax_results.npz", allow_pickle=True)
 r_values = data['r_values']
 
@@ -118,7 +118,7 @@ ax.xaxis.grid(False)
 fig.tight_layout(rect=[0, 0, 1, 0.94])
 
 # === SAVE ===
-outdir = Path(__file__).parent.parent / "paper/figures/plots"
+outdir = Path(__file__).resolve().parent / "results"
 outdir.mkdir(parents=True, exist_ok=True)
 fig.savefig(outdir / "phase-transition.pdf", bbox_inches='tight', dpi=300)
 fig.savefig(outdir / "phase-transition.png", bbox_inches='tight', dpi=150)

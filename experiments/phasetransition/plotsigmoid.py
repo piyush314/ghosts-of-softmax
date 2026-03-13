@@ -98,7 +98,7 @@ ax.set_title('At x = π, prediction already 96% confident',
 plt.tight_layout()
 
 # === SAVE ===
-outdir = Path(__file__).parent.parent / "paper/figures/plots"
+outdir = Path(__file__).resolve().parent / "results"
 outdir.mkdir(parents=True, exist_ok=True)
 fig.savefig(outdir / "sigmoid-pi.pdf", bbox_inches='tight', dpi=300)
 fig.savefig(outdir / "sigmoid-pi.png", bbox_inches='tight', dpi=150)

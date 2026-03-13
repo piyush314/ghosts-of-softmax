@@ -30,7 +30,7 @@ plt.rcParams.update({
 })
 
 # === LOAD DATA ===
-datapath = Path(__file__).parent.parent / "figures/ghosts_softmax"
+datapath = Path(__file__).resolve().parent / "results"
 data = np.load(datapath / "exp11_random_direction_sweep_fixed_results.npz",
                allow_pickle=True)
 
@@ -162,7 +162,7 @@ fig.suptitle('Transition near r=1 validates the analyticity radius as stability 
 plt.tight_layout(rect=[0, 0.02, 1, 0.96])
 
 # === SAVE ===
-outdir = Path(__file__).parent.parent / "paper/figures/plots"
+outdir = Path(__file__).resolve().parent / "results"
 outdir.mkdir(parents=True, exist_ok=True)
 fig.savefig(outdir / "random-sweep.pdf", bbox_inches='tight', dpi=300)
 fig.savefig(outdir / "random-sweep.png", bbox_inches='tight', dpi=150)

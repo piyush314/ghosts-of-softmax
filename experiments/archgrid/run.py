@@ -35,7 +35,7 @@ torch.set_num_threads(1)
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "falsify" / "data"
-PLOT_DIR = ROOT / "paper" / "figures" / "plots"
+PLOT_DIR = Path(__file__).resolve().parent / "results"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
 

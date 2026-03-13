@@ -33,14 +33,21 @@ np.random.seed(SEED)
 torch.manual_seed(SEED)
 torch.set_num_threads(4)
 
-FIG_DIR = Path("figures/ghosts_softmax")
+FIG_DIR = Path(__file__).resolve().parent / "results"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def load_digits_csv() -> Tuple[np.ndarray, np.ndarray]:
-    csv_path = Path(
-        "/Users/7ps/opt/anaconda3/lib/python3.12/site-packages/sklearn/datasets/data/digits.csv.gz"
-    )
+    import site
+    candidates = []
+    for sp in site.getsitepackages():
+        candidates.append(Path(sp) / "sklearn" / "datasets" / "data" / "digits.csv.gz")
+    usp = site.getusersitepackages()
+    if usp:
+        candidates.append(Path(usp) / "sklearn" / "datasets" / "data" / "digits.csv.gz")
+    csv_path = next((p for p in candidates if p.exists()), None)
+    if csv_path is None:
+        raise FileNotFoundError("Could not find sklearn digits.csv.gz")
     arr = np.loadtxt(gzip.open(csv_path, "rt"), delimiter=",", dtype=np.float32)
     X = arr[:, :-1] / 16.0
     y = arr[:, -1].astype(np.int64)

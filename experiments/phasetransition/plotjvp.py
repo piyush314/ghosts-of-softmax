@@ -35,7 +35,7 @@ plt.rcParams.update({
 })
 
 # === LOAD DATA ===
-datapath = Path(__file__).parent.parent / "figures/ghosts_softmax"
+datapath = Path(__file__).resolve().parent / "results"
 data = np.load(datapath / "exp7e_rho_deltamax_a_jvp_fullacc_results.npz",
                allow_pickle=True)
 r_values = data['r_values']
@@ -113,7 +113,7 @@ fig.suptitle(r"Phase Transition via JVP-Based $\rho_a$: Linear Model at $r = 1$"
 plt.tight_layout(rect=[0, 0, 1, 0.93])
 
 # === SAVE ===
-outdir = Path(__file__).parent.parent / "paper/figures/plots"
+outdir = Path(__file__).resolve().parent / "results"
 outdir.mkdir(parents=True, exist_ok=True)
 fig.savefig(outdir / "phase-jvp.pdf", bbox_inches='tight', dpi=300)
 fig.savefig(outdir / "phase-jvp.png", bbox_inches='tight', dpi=150)

@@ -4,7 +4,7 @@ The key insight: instability occurs when η‖∇f‖/ρ > 1, where ρ = π/Δ
 is the stability margin and Δ is the output logit spread.
 
 Usage:
-    from src.optim.rhoscaled import RhoScaledAdam
+    from ghosts.control import RhoScaledAdam
 
     opt = RhoScaledAdam(model.parameters(), lr=3e-4)
 
@@ -18,7 +18,7 @@ Usage:
 
 import torch
 from torch.optim import Optimizer
-from src.core.margins import compute_rho_out
+from ghosts.radii import compute_rho_out
 from typing import Optional
 
 
