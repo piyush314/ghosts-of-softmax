@@ -1,0 +1,24 @@
+{
+  "contract_version": 1,
+  "id": "randomdirs",
+  "title": "Random Directions Experiment",
+  "paper_result": "Random-direction validation",
+  "dataset": "sklearn digits",
+  "entry_point": "run.py",
+  "smoke_test": {
+    "kind": "import_main"
+  },
+  "canonical_command": [
+    "python",
+    "run.py"
+  ],
+  "artifacts": [
+    "experiments/randomdirs/results/exp11_random_direction_sweep_fixed.png",
+    "experiments/randomdirs/results/exp11_random_direction_logscale_fixed.png",
+    "experiments/randomdirs/results/exp11_rho_vs_hessian_scatter_fixed.png",
+    "experiments/randomdirs/results/exp11_crossing_point_histograms_fixed.png",
+    "experiments/randomdirs/results/exp11_random_direction_sweep_fixed_results.npz",
+    "experiments/randomdirs/results/summary.json"
+  ],
+  "notes": "Uses internal seed 42 and fixed training/evaluation settings baked into the script."
+}

@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import math
 import os
+import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -34,6 +35,13 @@ from torchvision import datasets, models, transforms
 torch.set_num_threads(4)
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from ghosts.reporting import repo_relpath, scalar_stats, write_summary
+
 DATA_DIR = ROOT / "falsify" / "data"
 PLOT_DIR = Path(__file__).resolve().parent / "results"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -623,6 +631,62 @@ def make_multiseed_plot(all_data: Dict, out_png: Path, out_pdf: Path,
     plt.close(fig)
 
 
+def build_standard_summary(all_data: Dict, lrs: List[float], config: Dict,
+                           out_pt: Path, out_png: Path, out_pdf: Path,
+                           out_summary: Path) -> Dict:
+    summary = {
+        "experiment_id": "resnetnatural",
+        "mode": "fixed-lr-scan",
+        "config": config,
+        "artifacts": {
+            "data": repo_relpath(out_pt, REPO_ROOT),
+            "plot_png": repo_relpath(out_png, REPO_ROOT),
+            "plot_pdf": repo_relpath(out_pdf, REPO_ROOT),
+            "summary_json": repo_relpath(out_summary, REPO_ROOT),
+        },
+        "learning_rates": {},
+    }
+    for lr in lrs:
+        lr_summary = {
+            "final_acc": scalar_stats(
+                [all_data[lr][seed]["epoch_logs"][-1]["test_acc"] for seed in all_data[lr]]
+            ),
+            "max_r": scalar_stats(
+                [max(log["r"] for log in all_data[lr][seed]["step_logs"]) for seed in all_data[lr]]
+            ),
+            "count_r_gt_1": scalar_stats(
+                [
+                    sum(1 for log in all_data[lr][seed]["step_logs"] if log["r"] > 1.0)
+                    for seed in all_data[lr]
+                ]
+            ),
+        }
+        summary["learning_rates"][str(lr)] = lr_summary
+    return summary
+
+
+def build_rho_ctrl_summary(all_data: Dict, config: Dict,
+                           out_pt: Path, out_summary: Path) -> Dict:
+    seeds = sorted(all_data.keys())
+    return {
+        "experiment_id": "resnetnatural",
+        "mode": "rho_ctrl",
+        "config": config,
+        "artifacts": {
+            "data": repo_relpath(out_pt, REPO_ROOT),
+            "summary_json": repo_relpath(out_summary, REPO_ROOT),
+        },
+        "rho_ctrl": {
+            "final_acc": scalar_stats(
+                [all_data[seed]["epoch_logs"][-1]["test_acc"] for seed in seeds]
+            ),
+            "max_r": scalar_stats(
+                [max(log["r"] for log in all_data[seed]["step_logs"]) for seed in seeds]
+            ),
+        },
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="ResNet-18 CIFAR-10 instability detection.")
     parser.add_argument("--lrs", type=str, default="0.01,0.05,0.1,0.2",
@@ -658,6 +722,7 @@ def main() -> None:
         out_pt = DATA_DIR / f"resnet18_rho_ctrl{r_tag}{tag}.pt"
         out_png = PLOT_DIR / f"resnet18-rho-ctrl{r_tag}{tag}.png"
         out_pdf = PLOT_DIR / f"resnet18-rho-ctrl{r_tag}{tag}.pdf"
+        out_summary = PLOT_DIR / f"summary{r_tag}{tag}.json"
 
         if args.replot:
             if not out_pt.exists():
@@ -679,7 +744,23 @@ def main() -> None:
             all_data[seed] = data
 
         torch.save(all_data, out_pt)
+        write_summary(
+            out_summary,
+            build_rho_ctrl_summary(
+                all_data,
+                {
+                    "seeds": seeds,
+                    "epochs": args.epochs,
+                    "batch_size": args.batch_size,
+                    "log_every": args.log_every,
+                    "target_r": target_r,
+                },
+                out_pt,
+                out_summary,
+            ),
+        )
         print(f"\nsaved: {out_pt}")
+        print(f"saved: {out_summary}")
 
         # Summary
         print(f"\n=== Summary (rho_ctrl target_r={target_r}, median across seeds) ===")
@@ -698,6 +779,7 @@ def main() -> None:
     out_pt = DATA_DIR / f"resnet18_instability_multiseed{tag}.pt"
     out_png = PLOT_DIR / f"resnet18-instability-multiseed{tag}.png"
     out_pdf = PLOT_DIR / f"resnet18-instability-multiseed{tag}.pdf"
+    out_summary = PLOT_DIR / f"summary{tag}.json"
 
     if args.replot:
         # Prefer momentum-corrected 5-seed data
@@ -732,6 +814,25 @@ def main() -> None:
     # Multi-seed comparison plot
     make_multiseed_plot(all_data, out_png, out_pdf)
     print(f"saved: {out_png}")
+    write_summary(
+        out_summary,
+        build_standard_summary(
+            all_data,
+            lrs,
+            {
+                "lrs": lrs,
+                "seeds": seeds,
+                "epochs": args.epochs,
+                "batch_size": args.batch_size,
+                "log_every": args.log_every,
+            },
+            out_pt,
+            out_png,
+            out_pdf,
+            out_summary,
+        ),
+    )
+    print(f"saved: {out_summary}")
 
     # Summary
     print("\n=== Summary (median across seeds) ===")

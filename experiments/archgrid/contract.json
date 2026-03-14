@@ -1,0 +1,39 @@
+{
+  "contract_version": 1,
+  "id": "archgrid",
+  "title": "Architecture Grid Experiment",
+  "paper_result": "Cross-architecture spike comparison",
+  "dataset": "sklearn digits",
+  "entry_point": "run.py",
+  "smoke_test": {
+    "kind": "help",
+    "args": [
+      "--help"
+    ]
+  },
+  "canonical_command": [
+    "python",
+    "run.py",
+    "--seeds",
+    "0,1,2,3,4",
+    "--archs",
+    "Transformer,MLP+LN,CNN+BN",
+    "--steps",
+    "200",
+    "--base-lr",
+    "0.015",
+    "--spike-at",
+    "50",
+    "--spike-mul",
+    "10.0",
+    "--device",
+    "auto"
+  ],
+  "artifacts": [
+    "experiments/falsify/data/archgrid_multiseed.pt",
+    "experiments/archgrid/results/archgrid-jvp-twocol.png",
+    "experiments/archgrid/results/archgrid-jvp-twocol.pdf",
+    "experiments/archgrid/results/summary.json"
+  ],
+  "notes": "Historical cache output currently lands under experiments/falsify/data."
+}

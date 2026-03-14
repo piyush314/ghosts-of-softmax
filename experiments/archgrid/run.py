@@ -16,6 +16,7 @@ import gzip
 import math
 import os
 import site
+import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -38,6 +39,12 @@ DATA_DIR = ROOT / "falsify" / "data"
 PLOT_DIR = Path(__file__).resolve().parent / "results"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
+REPO_ROOT = ROOT.parent
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from ghosts.reporting import repo_relpath, scalar_stats, write_summary
 
 PALETTE = {
     'red': '#E3120B',
@@ -459,6 +466,53 @@ def make_plot(data: Dict, archs: List[str], steps: int, spike_at: int,
     plt.close(fig)
 
 
+def build_summary(data: Dict, archs: List[str], config: Dict,
+                  out_pt: Path, out_png: Path, out_pdf: Path,
+                  out_summary: Path) -> Dict:
+    summary = {
+        "experiment_id": "archgrid",
+        "config": config,
+        "artifacts": {
+            "data": repo_relpath(out_pt, REPO_ROOT),
+            "plot_png": repo_relpath(out_png, REPO_ROOT),
+            "plot_pdf": repo_relpath(out_pdf, REPO_ROOT),
+            "summary_json": repo_relpath(out_summary, REPO_ROOT),
+        },
+        "architectures": {},
+    }
+    spike_at = int(config["spike_at"])
+    for arch in archs:
+        seeds = sorted(data[arch].keys())
+        arch_summary = {}
+        for mode in ["plain", "grad_clip", "rho_ctrl"]:
+            if mode not in data[arch][seeds[0]]:
+                continue
+            final_loss = [data[arch][seed][mode]["loss"][-1] for seed in seeds]
+            final_acc = [data[arch][seed][mode]["acc"][-1] for seed in seeds]
+            peak_loss = [
+                float(np.max(np.asarray(data[arch][seed][mode]["loss"][spike_at:], dtype=float)))
+                for seed in seeds
+            ]
+            mode_summary = {
+                "final_loss": scalar_stats(final_loss),
+                "final_acc": scalar_stats(final_acc),
+                "peak_loss_after_spike": scalar_stats(peak_loss),
+            }
+            if mode == "rho_ctrl":
+                max_r = []
+                for seed in seeds:
+                    tau = np.asarray(data[arch][seed][mode]["tau"], dtype=float)
+                    rho = np.asarray(data[arch][seed][mode]["rhoA"], dtype=float)
+                    valid = np.isfinite(rho) & (rho > 0)
+                    ratios = np.full_like(tau, np.nan, dtype=float)
+                    ratios[valid] = tau[valid] / rho[valid]
+                    max_r.append(float(np.nanmax(ratios)))
+                mode_summary["max_tau_over_rho"] = scalar_stats(max_r)
+            arch_summary[mode] = mode_summary
+        summary["architectures"][arch] = arch_summary
+    return summary
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Multi-seed archgrid test.")
     parser.add_argument("--seeds", type=str, default="0,1,2,3,4")
@@ -476,6 +530,7 @@ def main() -> None:
     out_pt = DATA_DIR / f"archgrid_multiseed{tag}.pt"
     out_png = PLOT_DIR / f"archgrid-jvp-twocol{tag}.png"
     out_pdf = PLOT_DIR / f"archgrid-jvp-twocol{tag}.pdf"
+    out_summary = PLOT_DIR / f"summary{tag}.json"
 
     archs = [a.strip() for a in args.archs.split(",") if a.strip()]
 
@@ -519,10 +574,15 @@ def main() -> None:
     torch.save(payload, out_pt)
     make_plot(data, archs, args.steps, args.spike_at, out_png, out_pdf,
               args.spike_mul)
+    write_summary(
+        out_summary,
+        build_summary(payload["data"], archs, payload["config"], out_pt, out_png, out_pdf, out_summary),
+    )
 
     print(f"saved: {out_pt}")
     print(f"saved: {out_png}")
     print(f"saved: {out_pdf}")
+    print(f"saved: {out_summary}")
 
 
 if __name__ == "__main__":

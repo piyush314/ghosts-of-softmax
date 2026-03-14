@@ -1,0 +1,21 @@
+{
+  "contract_version": 1,
+  "id": "phasetransition",
+  "title": "Phase Transition Experiment",
+  "paper_result": "Phase transition near r = 1",
+  "dataset": "sklearn digits",
+  "entry_point": "run.py",
+  "smoke_test": {
+    "kind": "import_main"
+  },
+  "canonical_command": [
+    "python",
+    "run.py"
+  ],
+  "artifacts": [
+    "experiments/phasetransition/results/exp10_phase_repro_randomdirs.png",
+    "experiments/phasetransition/results/exp10_phase_repro_randomdirs_results.npz",
+    "experiments/phasetransition/results/summary.json"
+  ],
+  "notes": "Uses internal defaults: seeds [7,11,19,23], target stages [0.84,0.95,0.98], and 20 random directions."
+}

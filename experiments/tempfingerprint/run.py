@@ -16,6 +16,7 @@ import gzip
 import math
 import os
 import site
+import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -37,6 +38,12 @@ DATA_DIR = ROOT / "falsify" / "data"
 PLOT_DIR = Path(__file__).resolve().parent / "results"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
+REPO_ROOT = ROOT.parent
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from ghosts.reporting import repo_relpath, scalar_stats, write_summary
 
 PALETTE = {
     0.25: "#7B1FA2",
@@ -301,6 +308,48 @@ def make_plot(data: Dict, temps: List[float], out_png: Path, out_pdf: Path) -> N
     plt.close(fig)
 
 
+def first_crossing(x: np.ndarray, y: np.ndarray, threshold: float) -> float:
+    idx = np.where(np.asarray(y, dtype=float) >= threshold)[0]
+    if idx.size == 0:
+        return float("nan")
+    return float(np.asarray(x, dtype=float)[idx[0]])
+
+
+def build_summary(data: Dict, temps: List[float], config: Dict,
+                  out_pt: Path, out_png: Path, out_pdf: Path,
+                  out_summary: Path) -> Dict:
+    seeds = sorted(data.keys())
+    summary = {
+        "experiment_id": "tempfingerprint",
+        "config": config,
+        "artifacts": {
+            "data": repo_relpath(out_pt, REPO_ROOT),
+            "plot_png": repo_relpath(out_png, REPO_ROOT),
+            "plot_pdf": repo_relpath(out_pdf, REPO_ROOT),
+            "summary_json": repo_relpath(out_summary, REPO_ROOT),
+        },
+        "temperatures": {},
+    }
+    for temp in temps:
+        delta_a = []
+        rho_t = []
+        loss2_tau = []
+        loss2_r = []
+        for seed in seeds:
+            item = data[seed][temp]
+            delta_a.append(float(item["delta_a"]))
+            rho_t.append(float(item["rho_t"]))
+            loss2_tau.append(first_crossing(item["tau"], item["loss_ratio"], 2.0))
+            loss2_r.append(first_crossing(item["r_scaled"], item["loss_ratio"], 2.0))
+        summary["temperatures"][str(temp)] = {
+            "delta_a": scalar_stats(delta_a),
+            "rho_t": scalar_stats(rho_t),
+            "loss2_cross_tau": scalar_stats(loss2_tau),
+            "loss2_cross_r_scaled": scalar_stats(loss2_r),
+        }
+    return summary
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Multi-seed fingerprint test.")
     parser.add_argument("--seeds", type=str, default="0,1,2,3,4")
@@ -317,6 +366,7 @@ def main() -> None:
     out_pt = DATA_DIR / f"fingerprint_multiseed{tag}.pt"
     out_png = PLOT_DIR / f"theory-fingerprint-tests_v4{tag}.png"
     out_pdf = PLOT_DIR / f"theory-fingerprint-tests_v4{tag}.pdf"
+    out_summary = PLOT_DIR / f"summary{tag}.json"
 
     temps = sorted([float(t.strip()) for t in args.temps.split(",") if t.strip()])
 
@@ -351,10 +401,15 @@ def main() -> None:
     }
     torch.save(payload, out_pt)
     make_plot(data, temps, out_png, out_pdf)
+    write_summary(
+        out_summary,
+        build_summary(payload["data"], temps, payload["config"], out_pt, out_png, out_pdf, out_summary),
+    )
 
     print(f"saved: {out_pt}")
     print(f"saved: {out_png}")
     print(f"saved: {out_pdf}")
+    print(f"saved: {out_summary}")
 
 
 if __name__ == "__main__":

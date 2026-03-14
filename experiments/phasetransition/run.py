@@ -16,6 +16,7 @@ from __future__ import annotations
 import copy
 import gzip
 import math
+import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -26,6 +27,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.func import functional_call, jvp
 
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from ghosts.reporting import repo_relpath, write_summary
 
 FIG_DIR = Path(__file__).resolve().parent / "results"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
@@ -467,6 +475,25 @@ def main() -> None:
         npz_payload[f"{stage}_step_seeds"] = np.array([x.item() for x in all_results[stage]["step"]])
     npz_path = FIG_DIR / "exp10_phase_repro_randomdirs_results.npz"
     np.savez(npz_path, **npz_payload)
+    summary_path = FIG_DIR / "summary.json"
+    write_summary(
+        summary_path,
+        {
+            "experiment_id": "phasetransition",
+            "config": {
+                "seeds": SEEDS,
+                "targets": TARGETS,
+                "stage_names": STAGE_NAMES,
+                "eval_n": EVAL_N,
+            },
+            "artifacts": {
+                "plot_png": repo_relpath(fig_path, REPO_ROOT),
+                "results_npz": repo_relpath(npz_path, REPO_ROOT),
+                "summary_json": repo_relpath(summary_path, REPO_ROOT),
+            },
+            "stages": summary_lines,
+        },
+    )
 
     print("\n" + "=" * 92)
     print("SUMMARY")
@@ -484,8 +511,8 @@ def main() -> None:
     print("\nSaved:")
     print(f"  - {fig_path.resolve()}")
     print(f"  - {npz_path.resolve()}")
+    print(f"  - {summary_path.resolve()}")
 
 
 if __name__ == "__main__":
     main()
-

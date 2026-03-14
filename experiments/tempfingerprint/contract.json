@@ -1,0 +1,37 @@
+{
+  "contract_version": 1,
+  "id": "tempfingerprint",
+  "title": "Temperature Fingerprint Experiment",
+  "paper_result": "Temperature-scaling fingerprint",
+  "dataset": "sklearn digits",
+  "entry_point": "run.py",
+  "smoke_test": {
+    "kind": "help",
+    "args": [
+      "--help"
+    ]
+  },
+  "canonical_command": [
+    "python",
+    "run.py",
+    "--seeds",
+    "0,1,2,3,4",
+    "--temps",
+    "0.25,0.5,1,2,4,8",
+    "--train-steps",
+    "120",
+    "--train-lr",
+    "0.01",
+    "--batch-size",
+    "256",
+    "--device",
+    "auto"
+  ],
+  "artifacts": [
+    "experiments/falsify/data/fingerprint_multiseed.pt",
+    "experiments/tempfingerprint/results/theory-fingerprint-tests_v4.png",
+    "experiments/tempfingerprint/results/theory-fingerprint-tests_v4.pdf",
+    "experiments/tempfingerprint/results/summary.json"
+  ],
+  "notes": "Historical cache output currently lands under experiments/falsify/data."
+}

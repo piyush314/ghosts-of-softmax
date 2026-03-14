@@ -20,6 +20,7 @@ import gzip
 import math
 import os
 import site
+import sys
 from collections import deque
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -42,6 +43,12 @@ DATA_DIR = ROOT / "falsify" / "data"
 PLOT_DIR = Path(__file__).resolve().parent / "results"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
+REPO_ROOT = ROOT.parent
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from ghosts.reporting import repo_relpath, scalar_stats, write_summary
 
 PALETTE = {
     'blue': '#1565C0',
@@ -382,6 +389,47 @@ def make_plot(data: Dict, modes: List[str], eval_every: int, out_png: Path,
     plt.close(fig)
 
 
+def build_summary(data: Dict, modes: List[str], config: Dict,
+                  out_pt: Path, out_png: Path, out_pdf: Path,
+                  out_summary: Path) -> Dict:
+    summary = {
+        "experiment_id": "tfmbottlenecks",
+        "config": config,
+        "artifacts": {
+            "data": repo_relpath(out_pt, REPO_ROOT),
+            "plot_png": repo_relpath(out_png, REPO_ROOT),
+            "plot_pdf": repo_relpath(out_pdf, REPO_ROOT),
+            "summary_json": repo_relpath(out_summary, REPO_ROOT),
+        },
+        "modes": {},
+    }
+    for mode in modes:
+        seeds = sorted(data[mode].keys())
+        mode_summary = {
+            "final_loss": scalar_stats([data[mode][seed]["loss"][-1] for seed in seeds]),
+            "final_acc": scalar_stats([data[mode][seed]["acc"][-1] for seed in seeds]),
+            "final_lr_eff": scalar_stats([data[mode][seed]["lr_eff"][-1] for seed in seeds]),
+        }
+        if mode == "all-radii":
+            counts = {"rho_out": 0, "rho_attn": 0, "rho_ffn": 0}
+            for seed in seeds:
+                rho_out = np.asarray(data[mode][seed]["rho_out"], dtype=float)
+                rho_attn = np.asarray(data[mode][seed]["rho_attn"], dtype=float)
+                rho_ffn = np.asarray(data[mode][seed]["rho_ffn"], dtype=float)
+                for i in range(len(rho_out)):
+                    candidates = {
+                        "rho_out": float(rho_out[i]),
+                        "rho_attn": float(rho_attn[i]),
+                        "rho_ffn": float(rho_ffn[i]),
+                    }
+                    finite = {k: v for k, v in candidates.items() if np.isfinite(v)}
+                    if finite:
+                        counts[min(finite, key=finite.get)] += 1
+            mode_summary["bottleneck_counts"] = counts
+        summary["modes"][mode] = mode_summary
+    return summary
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Multi-seed transformer radii test.")
     parser.add_argument("--seeds", type=str, default="0,1,2,3,4")
@@ -398,6 +446,7 @@ def main() -> None:
     out_pt = DATA_DIR / f"transformer_radii_multiseed{tag}.pt"
     out_png = PLOT_DIR / f"transformer-radii-compare{tag}.png"
     out_pdf = PLOT_DIR / f"transformer-radii-compare{tag}.pdf"
+    out_summary = PLOT_DIR / f"summary{tag}.json"
 
     modes = [m.strip() for m in args.modes.split(",") if m.strip()]
 
@@ -435,10 +484,15 @@ def main() -> None:
     }
     torch.save(payload, out_pt)
     make_plot(data, modes, args.eval_every, out_png, out_pdf)
+    write_summary(
+        out_summary,
+        build_summary(payload["data"], modes, payload["config"], out_pt, out_png, out_pdf, out_summary),
+    )
 
     print(f"saved: {out_pt}")
     print(f"saved: {out_png}")
     print(f"saved: {out_pdf}")
+    print(f"saved: {out_summary}")
 
     # Print final accuracies
     print("\nFinal accuracies:")

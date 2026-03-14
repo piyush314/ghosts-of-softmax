@@ -1,0 +1,39 @@
+{
+  "contract_version": 1,
+  "id": "resnetnatural",
+  "title": "ResNet Natural Instability Experiment",
+  "paper_result": "ResNet-18/CIFAR-10 natural-instability monitoring",
+  "dataset": "CIFAR-10",
+  "entry_point": "run.py",
+  "smoke_test": {
+    "kind": "help",
+    "args": [
+      "--help"
+    ]
+  },
+  "canonical_command": [
+    "python",
+    "run.py",
+    "--lrs",
+    "0.01,0.05,0.1,0.2",
+    "--seeds",
+    "0,1,2,3,4",
+    "--epochs",
+    "20",
+    "--batch-size",
+    "128",
+    "--log-every",
+    "50",
+    "--data-root",
+    "/tmp/cifar10",
+    "--device",
+    "auto"
+  ],
+  "artifacts": [
+    "experiments/falsify/data/resnet18_instability_multiseed.pt",
+    "experiments/resnetnatural/results/resnet18-instability-multiseed.png",
+    "experiments/resnetnatural/results/resnet18-instability-multiseed.pdf",
+    "experiments/resnetnatural/results/summary.json"
+  ],
+  "notes": "The default contract covers the natural-instability run, not the optional --rho-ctrl variant."
+}

@@ -22,6 +22,7 @@ import gzip
 import math
 import os
 import site
+import sys
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
@@ -44,6 +45,12 @@ DATA_DIR = ROOT / "falsify" / "data"
 PLOT_DIR = Path(__file__).resolve().parent / "results"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
+REPO_ROOT = ROOT.parent
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from ghosts.reporting import repo_relpath, scalar_stats, write_summary
 
 PALETTE = {
     'red': '#E3120B',
@@ -438,6 +445,48 @@ def make_plot(
     plt.close(fig)
 
 
+def build_summary(data: Dict, lr_keys: List[str], config: Dict,
+                  out_pt: Path, out_png: Path, out_pdf: Path,
+                  out_summary: Path) -> Dict:
+    summary = {
+        "experiment_id": "lrspike",
+        "config": config,
+        "artifacts": {
+            "data": repo_relpath(out_pt, REPO_ROOT),
+            "plot_png": repo_relpath(out_png, REPO_ROOT),
+            "plot_pdf": repo_relpath(out_pdf, REPO_ROOT),
+            "summary_json": repo_relpath(out_summary, REPO_ROOT),
+        },
+        "learning_rates": {},
+    }
+    spike_at = int(config["spike_at"])
+    for lr_key in lr_keys:
+        lr_summary = {}
+        for mode in ["plain", "rho_ctrl"]:
+            final_loss = [curve[-1] for curve in data[lr_key][mode]["loss"]]
+            final_acc = [curve[-1] for curve in data[lr_key][mode]["acc"]]
+            peak_loss = [
+                float(np.max(np.asarray(curve[spike_at:], dtype=float)))
+                for curve in data[lr_key][mode]["loss"]
+            ]
+            max_r = []
+            for tau_curve, rho_curve in zip(data[lr_key][mode]["tau"], data[lr_key][mode]["rhoA"]):
+                tau = np.asarray(tau_curve, dtype=float)
+                rho = np.asarray(rho_curve, dtype=float)
+                valid = np.isfinite(rho) & (rho > 0)
+                ratios = np.full_like(tau, np.nan, dtype=float)
+                ratios[valid] = tau[valid] / rho[valid]
+                max_r.append(float(np.nanmax(ratios)))
+            lr_summary[mode] = {
+                "final_loss": scalar_stats(final_loss),
+                "final_acc": scalar_stats(final_acc),
+                "peak_loss_after_spike": scalar_stats(peak_loss),
+                "max_tau_over_rho": scalar_stats(max_r),
+            }
+        summary["learning_rates"][lr_key] = lr_summary
+    return summary
+
+
 def main():
     parser = argparse.ArgumentParser(description="Multi-seed LR spike test.")
     parser.add_argument("--seeds", type=str, default="0,1,2,3,4")
@@ -456,6 +505,7 @@ def main():
     out_pt = DATA_DIR / f"lrsweep_multiseed{tag}.pt"
     out_png = PLOT_DIR / f"lrsweep-jvp-multiseed{tag}.png"
     out_pdf = PLOT_DIR / f"lrsweep-jvp-multiseed{tag}.pdf"
+    out_summary = PLOT_DIR / f"summary{tag}.json"
 
     if args.replot:
         if not out_pt.exists():
@@ -500,10 +550,15 @@ def main():
 
     lr_keys = [f"{lr:.0e}" for lr in lrs]
     make_plot(data, lr_keys, args.steps, args.spike_at, out_png, out_pdf)
+    write_summary(
+        out_summary,
+        build_summary(payload["data"], lr_keys, payload["config"], out_pt, out_png, out_pdf, out_summary),
+    )
 
     print(f"saved data: {out_pt}")
     print(f"saved plot: {out_png}")
     print(f"saved plot: {out_pdf}")
+    print(f"saved summary: {out_summary}")
 
 
 if __name__ == "__main__":

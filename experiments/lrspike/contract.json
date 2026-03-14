@@ -1,0 +1,37 @@
+{
+  "contract_version": 1,
+  "id": "lrspike",
+  "title": "LR Spike Experiment",
+  "paper_result": "LR-spike controller comparison",
+  "dataset": "sklearn digits",
+  "entry_point": "run.py",
+  "smoke_test": {
+    "kind": "help",
+    "args": [
+      "--help"
+    ]
+  },
+  "canonical_command": [
+    "python",
+    "run.py",
+    "--seeds",
+    "0,1,2,3,4",
+    "--lrs",
+    "1e-4,1e-3,1e-2",
+    "--steps",
+    "200",
+    "--spike-at",
+    "50",
+    "--spike-mul",
+    "1000.0",
+    "--device",
+    "auto"
+  ],
+  "artifacts": [
+    "experiments/falsify/data/lrsweep_multiseed.pt",
+    "experiments/lrspike/results/lrsweep-jvp-multiseed.png",
+    "experiments/lrspike/results/lrsweep-jvp-multiseed.pdf",
+    "experiments/lrspike/results/summary.json"
+  ],
+  "notes": "Historical cache output currently lands under experiments/falsify/data."
+}

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import gzip
 import math
+import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -28,6 +29,13 @@ import torch.nn.functional as F
 from torch.func import functional_call, jvp
 
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from ghosts.reporting import repo_relpath, scalar_stats, write_summary
+
 SEED = 42
 np.random.seed(SEED)
 torch.manual_seed(SEED)
@@ -35,6 +43,42 @@ torch.set_num_threads(4)
 
 FIG_DIR = Path(__file__).resolve().parent / "results"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def build_stage_summary(stages: Dict, all_results: Dict) -> Dict:
+    stage_summary = {}
+    for stage_name, sr in all_results.items():
+        r_vals = np.asarray(sr["r_values"], dtype=float)
+        is_grad = np.array(sr["is_gradient"], dtype=bool)
+        rho_vals = np.array(sr["rho_a"], dtype=np.float64)
+        hess_vals = np.array(sr["hess_boundary"], dtype=np.float64)
+        rnd_mask = (~is_grad) & np.isfinite(hess_vals)
+        binding_frac = float(np.mean(rho_vals[rnd_mask] < hess_vals[rnd_mask])) if np.any(rnd_mask) else float("nan")
+
+        cross_r_rho = []
+        cross_r_hess = []
+        for di in range(len(sr["rho_a"])):
+            if is_grad[di]:
+                continue
+            lr = np.asarray(sr["loss_ratios"][di], dtype=float)
+            rho = float(sr["rho_a"][di])
+            hess = float(sr["hess_boundary"][di])
+            idx = np.where(lr > 2.0)[0]
+            if idx.size == 0:
+                continue
+            r_cross = float(r_vals[idx[0]])
+            tau_cross = r_cross * rho
+            cross_r_rho.append(r_cross)
+            if np.isfinite(hess) and hess > 1e-12:
+                cross_r_hess.append(tau_cross / hess)
+
+        stage_summary[stage_name] = {
+            "base_accuracy": float(stages[stage_name]["acc"]),
+            "rho_beats_hessian_fraction": binding_frac,
+            "cross_rho_units_at_loss2": scalar_stats(cross_r_rho),
+            "cross_hessian_units_at_loss2": scalar_stats(cross_r_hess),
+        }
+    return stage_summary
 
 
 def load_digits_csv() -> Tuple[np.ndarray, np.ndarray]:
@@ -661,6 +705,28 @@ def main() -> None:
     npz_path = FIG_DIR / "exp11_random_direction_sweep_fixed_results.npz"
     np.savez(npz_path, **npz)
     print(f"[Saved: {npz_path}]")
+    summary_path = FIG_DIR / "summary.json"
+    write_summary(
+        summary_path,
+        {
+            "experiment_id": "randomdirs",
+            "config": {
+                "seed": SEED,
+                "n_random_directions": N_DIRS,
+                "stages": list(all_results.keys()),
+            },
+            "artifacts": {
+                "overview_png": repo_relpath(f1, REPO_ROOT),
+                "logscale_png": repo_relpath(f2, REPO_ROOT),
+                "scatter_png": repo_relpath(f3, REPO_ROOT),
+                "histogram_png": repo_relpath(f4, REPO_ROOT),
+                "results_npz": repo_relpath(npz_path, REPO_ROOT),
+                "summary_json": repo_relpath(summary_path, REPO_ROOT),
+            },
+            "stages": build_stage_summary(stages, all_results),
+        },
+    )
+    print(f"[Saved: {summary_path}]")
 
 
 if __name__ == "__main__":

@@ -6,12 +6,28 @@ Reproducibility code for the paper:
 ## Quick start
 
 ```bash
-pip install -e .
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --no-build-isolation -e .
+pytest
 ```
+
+## Tested baseline
+
+The current checked baseline is:
+
+- Python `3.12`
+- PyTorch `2.10.0`
+- torchvision `0.25.0`
+- NumPy `1.26.4`
+- Matplotlib `3.10.8`
+
+For a pinned install set, see `requirements.txt`.
 
 ## Experiments
 
-Each experiment has a `run.py` and `plot.py`:
+Each experiment has a canonical `run.py`. Some also provide separate plotting
+entry points:
 
 | Directory | Paper result |
 |-----------|-------------|
@@ -29,6 +45,9 @@ Example:
 python experiments/phasetransition/run.py
 python experiments/phasetransition/plot.py
 ```
+
+For experiments without a dedicated `plot.py`, the experiment README is the
+source of truth for expected outputs and how results are summarized.
 
 ## Core library
 
