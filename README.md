@@ -8,6 +8,7 @@ Reproducibility code for the paper:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
+python -m pip install -r requirements.txt
 python -m pip install --no-build-isolation -e .
 pytest
 ```
@@ -21,8 +22,31 @@ The current checked baseline is:
 - torchvision `0.25.0`
 - NumPy `1.26.4`
 - Matplotlib `3.10.8`
+- scikit-learn `1.5.2`
 
 For a pinned install set, see `requirements.txt`.
+
+## Validation
+
+Unit and contract tests:
+
+```bash
+pytest
+```
+
+End-to-end smoke runs for selected experiments:
+
+```bash
+GHOSTS_RUN_SMOKE=1 pytest tests/test_smoke_runs.py -q
+```
+
+Notebook execution:
+
+```bash
+jupyter nbconvert --to notebook --execute tutorials/01_binary_radius.ipynb --output /tmp/01_binary_radius.executed.ipynb
+jupyter nbconvert --to notebook --execute tutorials/02_kl_bound.ipynb --output /tmp/02_kl_bound.executed.ipynb
+jupyter nbconvert --to notebook --execute tutorials/03_rho_controller.ipynb --output /tmp/03_rho_controller.executed.ipynb
+```
 
 ## Experiments
 

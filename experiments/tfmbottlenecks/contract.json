@@ -11,6 +11,33 @@
       "--help"
     ]
   },
+  "smoke_run": {
+    "kind": "command",
+    "command": [
+      "python",
+      "run.py",
+      "--seeds",
+      "0",
+      "--modes",
+      "all-radii,output-only",
+      "--steps",
+      "40",
+      "--eval-every",
+      "10",
+      "--lr-base",
+      "0.002",
+      "--device",
+      "cpu",
+      "--tag",
+      "smoke"
+    ],
+    "expected_artifacts": [
+      "experiments/falsify/data/transformer_radii_multiseed_smoke.pt",
+      "experiments/tfmbottlenecks/results/transformer-radii-compare_smoke.png",
+      "experiments/tfmbottlenecks/results/transformer-radii-compare_smoke.pdf",
+      "experiments/tfmbottlenecks/results/summary_smoke.json"
+    ]
+  },
   "canonical_command": [
     "python",
     "run.py",

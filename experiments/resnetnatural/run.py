@@ -66,7 +66,9 @@ def build_cifar_resnet18(num_classes: int = 10) -> nn.Module:
 
 
 def make_loaders(data_root: Path, batch_size: int, num_workers: int = 2,
-                 download: bool = True) -> Tuple[DataLoader, DataLoader]:
+                 download: bool = True, dataset: str = "cifar10",
+                 train_samples: int | None = None,
+                 test_samples: int | None = None) -> Tuple[DataLoader, DataLoader]:
     tfm_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
@@ -77,10 +79,24 @@ def make_loaders(data_root: Path, batch_size: int, num_workers: int = 2,
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)),
     ])
-    train_ds = datasets.CIFAR10(root=str(data_root), train=True, transform=tfm_train,
-                                 download=download)
-    test_ds = datasets.CIFAR10(root=str(data_root), train=False, transform=tfm_test,
-                                download=download)
+    if dataset == "fake":
+        train_ds = datasets.FakeData(
+            size=train_samples or 128,
+            image_size=(3, 32, 32),
+            num_classes=10,
+            transform=tfm_train,
+        )
+        test_ds = datasets.FakeData(
+            size=test_samples or 64,
+            image_size=(3, 32, 32),
+            num_classes=10,
+            transform=tfm_test,
+        )
+    else:
+        train_ds = datasets.CIFAR10(root=str(data_root), train=True, transform=tfm_train,
+                                     download=download)
+        test_ds = datasets.CIFAR10(root=str(data_root), train=False, transform=tfm_test,
+                                    download=download)
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,
                               num_workers=num_workers, pin_memory=True)
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False,
@@ -283,12 +299,21 @@ def train_one_epoch_rho_ctrl(model: nn.Module, opt: torch.optim.Optimizer,
 
 def run_training(lr: float, epochs: int, batch_size: int, device: torch.device,
                  data_root: Path, seed: int, log_every: int = 50,
-                 use_rho_ctrl: bool = False, target_r: float = 1.0) -> Dict:
+                 use_rho_ctrl: bool = False, target_r: float = 1.0,
+                 dataset: str = "cifar10", train_samples: int | None = None,
+                 test_samples: int | None = None, num_workers: int = 2) -> Dict:
     """Run full training at given LR, logging r throughout."""
     np.random.seed(seed)
     torch.manual_seed(seed)
 
-    train_loader, test_loader = make_loaders(data_root, batch_size)
+    train_loader, test_loader = make_loaders(
+        data_root,
+        batch_size,
+        num_workers=num_workers,
+        dataset=dataset,
+        train_samples=train_samples,
+        test_samples=test_samples,
+    )
     model = build_cifar_resnet18().to(device)
     # For rho_ctrl mode, start with a dummy LR (will be overwritten each step)
     init_lr = 0.1 if use_rho_ctrl else lr
@@ -698,6 +723,10 @@ def main() -> None:
     parser.add_argument("--log-every", type=int, default=50,
                         help="Log r every N batches")
     parser.add_argument("--data-root", type=Path, default=Path("/tmp/cifar10"))
+    parser.add_argument("--dataset", choices=["cifar10", "fake"], default="cifar10")
+    parser.add_argument("--train-samples", type=int, default=None)
+    parser.add_argument("--test-samples", type=int, default=None)
+    parser.add_argument("--num-workers", type=int, default=2)
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--tag", type=str, default="")
     parser.add_argument("--replot", action="store_true")
@@ -733,14 +762,21 @@ def main() -> None:
             print(f"Replot not implemented for rho_ctrl mode")
             return
 
-        print(f"device={device} seeds={seeds} epochs={args.epochs} mode=rho_ctrl target_r={target_r}")
+        print(
+            f"device={device} seeds={seeds} epochs={args.epochs} "
+            f"mode=rho_ctrl target_r={target_r} dataset={args.dataset}"
+        )
 
         all_data = {}
         for seed in seeds:
             print(f"  seed {seed}")
             data = run_training(0.0, args.epochs, args.batch_size, device,
                                args.data_root, seed, args.log_every,
-                               use_rho_ctrl=True, target_r=target_r)
+                               use_rho_ctrl=True, target_r=target_r,
+                               dataset=args.dataset,
+                               train_samples=args.train_samples,
+                               test_samples=args.test_samples,
+                               num_workers=args.num_workers)
             all_data[seed] = data
 
         torch.save(all_data, out_pt)
@@ -754,6 +790,10 @@ def main() -> None:
                     "batch_size": args.batch_size,
                     "log_every": args.log_every,
                     "target_r": target_r,
+                    "dataset": args.dataset,
+                    "train_samples": args.train_samples,
+                    "test_samples": args.test_samples,
+                    "num_workers": args.num_workers,
                 },
                 out_pt,
                 out_summary,
@@ -796,7 +836,10 @@ def main() -> None:
         print(f"saved: {out_png}")
         return
 
-    print(f"device={device} lrs={lrs} seeds={seeds} epochs={args.epochs}")
+    print(
+        f"device={device} lrs={lrs} seeds={seeds} epochs={args.epochs} "
+        f"dataset={args.dataset}"
+    )
 
     all_data = {lr: {} for lr in lrs}
     for lr in lrs:
@@ -804,7 +847,11 @@ def main() -> None:
         for seed in seeds:
             print(f"  seed {seed}")
             data = run_training(lr, args.epochs, args.batch_size, device,
-                               args.data_root, seed, args.log_every)
+                               args.data_root, seed, args.log_every,
+                               dataset=args.dataset,
+                               train_samples=args.train_samples,
+                               test_samples=args.test_samples,
+                               num_workers=args.num_workers)
             all_data[lr][seed] = data
 
     # Save all data
@@ -825,6 +872,10 @@ def main() -> None:
                 "epochs": args.epochs,
                 "batch_size": args.batch_size,
                 "log_every": args.log_every,
+                "dataset": args.dataset,
+                "train_samples": args.train_samples,
+                "test_samples": args.test_samples,
+                "num_workers": args.num_workers,
             },
             out_pt,
             out_png,

@@ -50,6 +50,11 @@ def test_contract_schema_and_paths():
         assert contract["artifacts"]
         assert (contract_path.parent / contract["entry_point"]).exists()
         assert any(rel_path.endswith("summary.json") for rel_path in contract["artifacts"])
+        if "smoke_run" in contract:
+            smoke_run = contract["smoke_run"]
+            assert smoke_run["kind"] == "command"
+            assert smoke_run["command"][:2] == ["python", contract["entry_point"]]
+            assert smoke_run["expected_artifacts"]
         for rel_path in contract["artifacts"]:
             assert not Path(rel_path).is_absolute()
 

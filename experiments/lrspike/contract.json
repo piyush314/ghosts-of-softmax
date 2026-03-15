@@ -11,6 +11,35 @@
       "--help"
     ]
   },
+  "smoke_run": {
+    "kind": "command",
+    "command": [
+      "python",
+      "run.py",
+      "--seeds",
+      "0",
+      "--lrs",
+      "1e-3",
+      "--steps",
+      "6",
+      "--spike-at",
+      "3",
+      "--spike-mul",
+      "10.0",
+      "--device",
+      "cpu",
+      "--print-every",
+      "0",
+      "--tag",
+      "smoke"
+    ],
+    "expected_artifacts": [
+      "experiments/falsify/data/lrsweep_multiseed_smoke.pt",
+      "experiments/lrspike/results/lrsweep-jvp-multiseed_smoke.png",
+      "experiments/lrspike/results/lrsweep-jvp-multiseed_smoke.pdf",
+      "experiments/lrspike/results/summary_smoke.json"
+    ]
+  },
   "canonical_command": [
     "python",
     "run.py",

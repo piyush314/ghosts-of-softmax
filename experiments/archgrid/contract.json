@@ -11,6 +11,35 @@
       "--help"
     ]
   },
+  "smoke_run": {
+    "kind": "command",
+    "command": [
+      "python",
+      "run.py",
+      "--seeds",
+      "0",
+      "--archs",
+      "MLP+LN",
+      "--steps",
+      "4",
+      "--base-lr",
+      "0.01",
+      "--spike-at",
+      "2",
+      "--spike-mul",
+      "2.0",
+      "--device",
+      "cpu",
+      "--tag",
+      "smoke"
+    ],
+    "expected_artifacts": [
+      "experiments/falsify/data/archgrid_multiseed_smoke.pt",
+      "experiments/archgrid/results/archgrid-jvp-twocol_smoke.png",
+      "experiments/archgrid/results/archgrid-jvp-twocol_smoke.pdf",
+      "experiments/archgrid/results/summary_smoke.json"
+    ]
+  },
   "canonical_command": [
     "python",
     "run.py",

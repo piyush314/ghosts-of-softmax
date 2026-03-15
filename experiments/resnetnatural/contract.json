@@ -11,6 +11,41 @@
       "--help"
     ]
   },
+  "smoke_run": {
+    "kind": "command",
+    "command": [
+      "python",
+      "run.py",
+      "--dataset",
+      "fake",
+      "--train-samples",
+      "64",
+      "--test-samples",
+      "32",
+      "--num-workers",
+      "0",
+      "--lrs",
+      "0.01",
+      "--seeds",
+      "0",
+      "--epochs",
+      "1",
+      "--batch-size",
+      "16",
+      "--log-every",
+      "10",
+      "--device",
+      "cpu",
+      "--tag",
+      "smoke"
+    ],
+    "expected_artifacts": [
+      "experiments/falsify/data/resnet18_instability_multiseed_smoke.pt",
+      "experiments/resnetnatural/results/resnet18-instability-multiseed_smoke.png",
+      "experiments/resnetnatural/results/resnet18-instability-multiseed_smoke.pdf",
+      "experiments/resnetnatural/results/summary_smoke.json"
+    ]
+  },
   "canonical_command": [
     "python",
     "run.py",

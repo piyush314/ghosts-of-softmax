@@ -11,6 +11,33 @@
       "--help"
     ]
   },
+  "smoke_run": {
+    "kind": "command",
+    "command": [
+      "python",
+      "run.py",
+      "--seeds",
+      "0",
+      "--temps",
+      "1,2",
+      "--train-steps",
+      "8",
+      "--train-lr",
+      "0.01",
+      "--batch-size",
+      "64",
+      "--device",
+      "cpu",
+      "--tag",
+      "smoke"
+    ],
+    "expected_artifacts": [
+      "experiments/falsify/data/fingerprint_multiseed_smoke.pt",
+      "experiments/tempfingerprint/results/theory-fingerprint-tests_v4_smoke.png",
+      "experiments/tempfingerprint/results/theory-fingerprint-tests_v4_smoke.pdf",
+      "experiments/tempfingerprint/results/summary_smoke.json"
+    ]
+  },
   "canonical_command": [
     "python",
     "run.py",
