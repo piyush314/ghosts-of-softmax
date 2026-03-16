@@ -56,6 +56,8 @@ jobs:
       - name: Execute notebooks
         run: |
           mkdir -p /tmp/notebooks
-          jupyter nbconvert --to notebook --execute tutorials/01_binary_radius.ipynb --output /tmp/notebooks/01_binary_radius.executed.ipynb
-          jupyter nbconvert --to notebook --execute tutorials/02_kl_bound.ipynb --output /tmp/notebooks/02_kl_bound.executed.ipynb
-          jupyter nbconvert --to notebook --execute tutorials/03_rho_controller.ipynb --output /tmp/notebooks/03_rho_controller.executed.ipynb
+          jupyter nbconvert --to notebook --execute tutorials/00_step_controller_intro.ipynb --output /tmp/notebooks/00_step_controller_intro.executed.ipynb
+          jupyter nbconvert --to notebook --execute tutorials/01_adam_controller.ipynb --output /tmp/notebooks/01_adam_controller.executed.ipynb
+          jupyter nbconvert --to notebook --execute tutorials/02_momentum_controller.ipynb --output /tmp/notebooks/02_momentum_controller.executed.ipynb
+          jupyter nbconvert --to notebook --execute tutorials/03_binary_radius.ipynb --output /tmp/notebooks/03_binary_radius.executed.ipynb
+          jupyter nbconvert --to notebook --execute tutorials/04_kl_bound.ipynb --output /tmp/notebooks/04_kl_bound.executed.ipynb
