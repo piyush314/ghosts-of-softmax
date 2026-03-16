@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > **Ghosts of Softmax: Complex Singularities That Limit Safe Step Sizes in Cross-Entropy**
-> [[arXiv]](https://arxiv.org/abs/2503.XXXXX)
+> [[Paper (PDF)](assets/paper.pdf)] · arXiv link coming soon
 
 Large-scale training still suffers abrupt instabilities despite
 decades of work on loss geometry, curvature, and optimizer design. A
