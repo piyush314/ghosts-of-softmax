@@ -7,8 +7,8 @@
 > [[arXiv]](https://arxiv.org/abs/2503.XXXXX)
 
 Training in deep learning can still fail suddenly, even though we have spent a
-lot of effort studying losses, curvature, and optimizers. A common way to
-analyze optimization is to replace the true loss by a local Taylor
+lot of effort studying losses, curvature, and optimizers. The standard defense
+is local analysis: replace the true loss by a local Taylor
 approximation and ask whether that approximation goes down after a step. The
 problem is that a Taylor approximation is only trustworthy inside its radius of
 convergence. Inside that radius, local analysis can be useful. Outside it, the
@@ -25,12 +25,13 @@ radius of convergence is determined by the nearest singularity in the complex
 plane.
 
 For cross-entropy training, those singularities come from complex zeros of the
-softmax partition function. Under a logit-linearization assumption, this gives
+softmax partition function — the "ghosts" of the title. Under a logit-linearization assumption, this gives
 a practical way to estimate a local convergence radius from quantities we can
 compute cheaply, such as finite differences or Jacobian--vector products. That
 leads to a simple question for any proposed update: is this step still inside
 the local convergence radius, or has it already gone beyond the region where
-Taylor-based reasoning is reliable?
+Taylor-based reasoning is reliable? The experiments in this repository test
+that question empirically.
 
 This repository is the code companion to the paper. It is designed to help
 newcomers understand the idea step by step. The tutorials explain the basic
