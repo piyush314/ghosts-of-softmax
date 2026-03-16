@@ -121,9 +121,9 @@ GHOSTS_RUN_SMOKE=1 pytest tests/test_smoke_runs.py -q
 | Notebook | Topic |
 |----------|-------|
 | [`00_step_controller_intro.ipynb`](tutorials/00_step_controller_intro.ipynb) | First tutorial: fixed SGD vs rho-capped SGD vs rho-set SGD |
-| [`01_binary_radius.ipynb`](tutorials/01_binary_radius.ipynb) | Binary softmax convergence radius |
-| [`02_kl_bound.ipynb`](tutorials/02_kl_bound.ipynb) | KL divergence bound |
-| [`03_rho_controller.ipynb`](tutorials/03_rho_controller.ipynb) | Adam tutorial: fixed Adam vs rho-scaled Adam |
+| [`01_adam_controller.ipynb`](tutorials/01_adam_controller.ipynb) | Second tutorial: exact directional Adam controller vs earlier rho-scaled alternative |
+| [`02_binary_radius.ipynb`](tutorials/02_binary_radius.ipynb) | Binary softmax convergence radius |
+| [`03_kl_bound.ipynb`](tutorials/03_kl_bound.ipynb) | KL divergence bound |
 
 ## Experiments
 
