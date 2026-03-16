@@ -20,7 +20,8 @@
     "expected_artifacts": [
       "experiments/ghostenvelope/cache/ghostenvelope_smoke.pt",
       "experiments/ghostenvelope/results/ghost-envelope_smoke.png",
-      "experiments/ghostenvelope/results/ghost-envelope_smoke.pdf"
+      "experiments/ghostenvelope/results/ghost-envelope_smoke.pdf",
+      "experiments/ghostenvelope/results/summary_smoke.json"
     ]
   },
   "canonical_command": [
@@ -30,6 +31,8 @@
   "artifacts": [
     "experiments/ghostenvelope/cache/ghostenvelope.pt",
     "experiments/ghostenvelope/results/ghost-envelope.png",
-    "experiments/ghostenvelope/results/ghost-envelope.pdf"
-  ]
+    "experiments/ghostenvelope/results/ghost-envelope.pdf",
+    "experiments/ghostenvelope/results/summary.json"
+  ],
+  "notes": "The canonical run writes both the cached ghost data and the rendered envelope plots."
 }

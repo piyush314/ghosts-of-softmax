@@ -93,17 +93,7 @@ def plotOne(ax, snap, color, title):
     ax.set_title(f"{title} ({100*acc:.0f}%)", loc="left", fontsize=10)
 
 
-def main():
-    pa = argparse.ArgumentParser()
-    pa.add_argument("--tag", type=str, default="")
-    args = pa.parse_args()
-    tag = f"_{args.tag}" if args.tag else ""
-    pt = DATA_DIR / f"ghostenvelope{tag}.pt"
-    if not pt.exists():
-        print(f"Not found: {pt}")
-        return
-
-    payload = torch.load(pt, weights_only=False)
+def make_plot(payload, outpng: Path, outpdf: Path) -> None:
     data = payload["data"]
     archs = payload["archs"]
 
@@ -132,11 +122,25 @@ def main():
     fig.suptitle("Ghost Envelope Structure Across Training",
                  fontsize=14, fontweight="bold", x=0.02, ha="left")
     fig.tight_layout(rect=[0, 0, 1, 0.94])
-    outpng = PLOT_DIR / f"ghost-envelope{tag}.png"
-    outpdf = PLOT_DIR / f"ghost-envelope{tag}.pdf"
     fig.savefig(outpng, dpi=200, bbox_inches="tight")
     fig.savefig(outpdf, bbox_inches="tight")
     plt.close(fig)
+
+
+def main():
+    pa = argparse.ArgumentParser()
+    pa.add_argument("--tag", type=str, default="")
+    args = pa.parse_args()
+    tag = f"_{args.tag}" if args.tag else ""
+    pt = DATA_DIR / f"ghostenvelope{tag}.pt"
+    if not pt.exists():
+        print(f"Not found: {pt}")
+        return
+
+    payload = torch.load(pt, weights_only=False)
+    outpng = PLOT_DIR / f"ghost-envelope{tag}.png"
+    outpdf = PLOT_DIR / f"ghost-envelope{tag}.pdf"
+    make_plot(payload, outpng, outpdf)
     print(f"saved: {outpng}")
     print(f"saved: {outpdf}")
 

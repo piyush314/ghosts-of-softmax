@@ -6,6 +6,8 @@ at 3 stages (init, mid, final), saves for plotting.
 
 Outputs:
   - cache/ghostenvelope{tag}.pt
+  - results/ghost-envelope{tag}.{png,pdf}
+  - results/summary{tag}.json
 """
 
 from __future__ import annotations
@@ -17,7 +19,7 @@ import os
 import site
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib-ghostenv")
 
@@ -37,7 +39,16 @@ from models import ARCHS, TinyTfm
 
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "cache"
+PLOT_DIR = ROOT / "results"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+PLOT_DIR.mkdir(parents=True, exist_ok=True)
+REPO_ROOT = ROOT.parents[1]
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from ghosts.reporting import repo_relpath, scalar_stats, write_summary
+from plot import make_plot
 
 
 def loadDigits() -> Tuple[np.ndarray, np.ndarray]:
@@ -142,6 +153,41 @@ def runArch(name, mkModel, lr, steps, Xtr, ytr, Xeval, yeval, seed):
     return results
 
 
+def build_summary(data: Dict, archs: List[str], config: Dict,
+                  out_pt: Path, out_png: Path, out_pdf: Path,
+                  out_summary: Path) -> Dict:
+    summary = {
+        "experiment_id": "ghostenvelope",
+        "config": config,
+        "artifacts": {
+            "data": repo_relpath(out_pt, REPO_ROOT),
+            "plot_png": repo_relpath(out_png, REPO_ROOT),
+            "plot_pdf": repo_relpath(out_pdf, REPO_ROOT),
+            "summary_json": repo_relpath(out_summary, REPO_ROOT),
+        },
+        "architectures": {},
+    }
+    for arch in archs:
+        seeds = sorted(data[arch].keys())
+        stage_names = ["init", "mid", "final"]
+        stages = {}
+        for idx, stage_name in enumerate(stage_names):
+            snaps = [data[arch][seed][idx] for seed in seeds]
+            rho_vals = [float(snap["rhoA"]) for snap in snaps]
+            acc_vals = [float(snap["acc"]) for snap in snaps]
+            finite_im = []
+            for snap in snaps:
+                im = np.asarray(snap["im"], dtype=float)
+                finite_im.extend(im[np.isfinite(im) & (im > 0)].tolist())
+            stages[stage_name] = {
+                "rho_a": scalar_stats(rho_vals),
+                "accuracy": scalar_stats(acc_vals),
+                "ghost_imag": scalar_stats(finite_im),
+            }
+        summary["architectures"][arch] = stages
+    return summary
+
+
 def main():
     pa = argparse.ArgumentParser()
     pa.add_argument("--smoke", action="store_true")
@@ -153,6 +199,10 @@ def main():
         args.tag = args.tag or "smoke"
     tag = f"_{args.tag}" if args.tag else ""
     seeds = [int(s) for s in args.seeds.split(",")]
+    out_pt = DATA_DIR / f"ghostenvelope{tag}.pt"
+    out_png = PLOT_DIR / f"ghost-envelope{tag}.png"
+    out_pdf = PLOT_DIR / f"ghost-envelope{tag}.pdf"
+    out_summary = PLOT_DIR / f"summary{tag}.json"
 
     X, y = loadDigits()
     Xtr, Xte, ytr, yte = stratSplit(X, y)
@@ -177,9 +227,22 @@ def main():
             acc = data[aname][seed][-1]["acc"]
             print(f"  seed={seed} final_acc={acc:.3f}")
 
-    out = DATA_DIR / f"ghostenvelope{tag}.pt"
-    torch.save({"data": data, "archs": list(ARCHS.keys())}, out)
-    print(f"saved: {out}")
+    payload = {
+        "config": {"seeds": seeds, "smoke": bool(args.smoke)},
+        "data": data,
+        "archs": list(ARCHS.keys()),
+    }
+    torch.save(payload, out_pt)
+    make_plot(payload, out_png, out_pdf)
+    write_summary(
+        out_summary,
+        build_summary(payload["data"], payload["archs"], payload["config"],
+                      out_pt, out_png, out_pdf, out_summary),
+    )
+    print(f"saved: {out_pt}")
+    print(f"saved: {out_png}")
+    print(f"saved: {out_pdf}")
+    print(f"saved: {out_summary}")
 
 
 if __name__ == "__main__":

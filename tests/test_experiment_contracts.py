@@ -20,7 +20,9 @@ def load_contract(path: Path) -> dict:
 
 
 def test_contract_count_and_basic_files():
-    assert len(CONTRACT_PATHS) == 7
+    # Keep this as a lower bound so new experiments can be added without
+    # rewriting the test, while still catching accidental contract loss.
+    assert len(CONTRACT_PATHS) >= 8
     for contract_path in CONTRACT_PATHS:
         exp_dir = contract_path.parent
         assert (exp_dir / "README.md").exists()
