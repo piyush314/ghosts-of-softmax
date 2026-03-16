@@ -6,7 +6,7 @@ Log r = τ/ρ_a at every step. Test whether r approaching 1 is a leading
 indicator of loss spikes.
 
 Outputs:
-  - falsify/data/resnet18_instability_{lr}.pt
+  - cache/resnet18_instability_{lr}.pt
   - paper/figures/plots/resnet18-instability-{lr}.{png,pdf}
 """
 
@@ -42,7 +42,7 @@ if str(SRC_DIR) not in sys.path:
 
 from ghosts.reporting import repo_relpath, scalar_stats, write_summary
 
-DATA_DIR = ROOT / "falsify" / "data"
+DATA_DIR = Path(__file__).resolve().parent / "cache"
 PLOT_DIR = Path(__file__).resolve().parent / "results"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 PLOT_DIR.mkdir(parents=True, exist_ok=True)

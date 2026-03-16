@@ -19,5 +19,9 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest", "ruff"]
 
+[project.urls]
+Repository = "https://github.com/piyush314/ghosts-of-softmax"
+Paper = "https://arxiv.org/abs/2503.XXXXX"
+
 [tool.setuptools.packages.find]
 where = ["src"]

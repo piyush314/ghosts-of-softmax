@@ -22,3 +22,5 @@ data/raw/
 .torch_cache/
 .hf_models/
 .pytest_cache/
+cache/
+!assets/*.png

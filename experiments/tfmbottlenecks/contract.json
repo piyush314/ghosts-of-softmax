@@ -32,7 +32,7 @@
       "smoke"
     ],
     "expected_artifacts": [
-      "experiments/falsify/data/transformer_radii_multiseed_smoke.pt",
+      "cache/transformer_radii_multiseed_smoke.pt",
       "experiments/tfmbottlenecks/results/transformer-radii-compare_smoke.png",
       "experiments/tfmbottlenecks/results/transformer-radii-compare_smoke.pdf",
       "experiments/tfmbottlenecks/results/summary_smoke.json"
@@ -55,10 +55,10 @@
     "auto"
   ],
   "artifacts": [
-    "experiments/falsify/data/transformer_radii_multiseed.pt",
+    "cache/transformer_radii_multiseed.pt",
     "experiments/tfmbottlenecks/results/transformer-radii-compare.png",
     "experiments/tfmbottlenecks/results/transformer-radii-compare.pdf",
     "experiments/tfmbottlenecks/results/summary.json"
   ],
-  "notes": "Historical cache output currently lands under experiments/falsify/data. The all-radii mode uses the FFN proxy rho_ffn = Q0.01(|h|/|dh|)."
+  "notes": "Cache output lands alongside the experiment. The all-radii mode uses the FFN proxy rho_ffn = Q0.01(|h|/|dh|)."
 }

@@ -5,7 +5,7 @@ Compares Transformer, MLP+LN, CNN+BN with 10x spike at step 50.
 Plain Adam vs rho-controller.
 
 Outputs:
-  - falsify/data/archgrid_multiseed.pt
+  - cache/archgrid_multiseed.pt
   - paper/figures/plots/archgrid-jvp-twocol.{png,pdf}
 """
 
@@ -35,7 +35,7 @@ from torch.func import functional_call, jvp
 torch.set_num_threads(1)
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA_DIR = ROOT / "falsify" / "data"
+DATA_DIR = Path(__file__).resolve().parent / "cache"
 PLOT_DIR = Path(__file__).resolve().parent / "results"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 PLOT_DIR.mkdir(parents=True, exist_ok=True)

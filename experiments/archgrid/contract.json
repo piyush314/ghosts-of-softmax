@@ -34,7 +34,7 @@
       "smoke"
     ],
     "expected_artifacts": [
-      "experiments/falsify/data/archgrid_multiseed_smoke.pt",
+      "cache/archgrid_multiseed_smoke.pt",
       "experiments/archgrid/results/archgrid-jvp-twocol_smoke.png",
       "experiments/archgrid/results/archgrid-jvp-twocol_smoke.pdf",
       "experiments/archgrid/results/summary_smoke.json"
@@ -59,10 +59,10 @@
     "auto"
   ],
   "artifacts": [
-    "experiments/falsify/data/archgrid_multiseed.pt",
+    "cache/archgrid_multiseed.pt",
     "experiments/archgrid/results/archgrid-jvp-twocol.png",
     "experiments/archgrid/results/archgrid-jvp-twocol.pdf",
     "experiments/archgrid/results/summary.json"
   ],
-  "notes": "Historical cache output currently lands under experiments/falsify/data."
+  "notes": "Cache output lands alongside the experiment."
 }

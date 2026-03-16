@@ -9,7 +9,7 @@ Compares adaptive vs fixed learning rates on tiny transformer:
   - fixed-16x: 16× base LR
 
 Outputs:
-  - falsify/data/transformer_radii_multiseed.pt
+  - cache/transformer_radii_multiseed.pt
   - paper/figures/plots/transformer-radii-compare.{png,pdf}
 """
 
@@ -39,7 +39,7 @@ from torch.func import functional_call, jvp
 torch.set_num_threads(1)
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA_DIR = ROOT / "falsify" / "data"
+DATA_DIR = Path(__file__).resolve().parent / "cache"
 PLOT_DIR = Path(__file__).resolve().parent / "results"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 PLOT_DIR.mkdir(parents=True, exist_ok=True)

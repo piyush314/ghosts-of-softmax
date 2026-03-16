@@ -5,7 +5,7 @@ Trains MLP on digits at different temperatures, sweeps one-step sizes,
 verifies curves collapse when scaled by r_T = tau * Delta_a / (pi * T).
 
 Outputs:
-  - falsify/data/fingerprint_multiseed.pt
+  - cache/fingerprint_multiseed.pt
   - paper/figures/plots/theory-fingerprint-tests_v4.{png,pdf}
 """
 
@@ -34,7 +34,7 @@ from torch.nn.utils import parameters_to_vector, vector_to_parameters
 torch.set_num_threads(1)
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA_DIR = ROOT / "falsify" / "data"
+DATA_DIR = Path(__file__).resolve().parent / "cache"
 PLOT_DIR = Path(__file__).resolve().parent / "results"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 PLOT_DIR.mkdir(parents=True, exist_ok=True)

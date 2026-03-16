@@ -1,79 +1,68 @@
 # Ghosts of Softmax
 
-Reproducibility code for the paper:
-**Ghosts of Softmax: When Complex Zeros Cap the Convergence Radius**
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/fig1.ipynb)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## Quick start
+> **Ghosts of Softmax: When Complex Zeros Cap the Convergence Radius**
+> [[arXiv]](https://arxiv.org/abs/2503.XXXXX)
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-python -m pip install --no-build-isolation -e .
-pytest
-```
+The softmax partition function has complex zeros that cap the Taylor
+convergence radius of cross-entropy loss. Beyond that radius, local
+surrogates need not track the true loss, so descent guarantees become
+unreliable. We derive closed-form expressions for this radius and show
+that the normalized step size r = τ/ρ\_a cleanly separates safe from
+dangerous updates across six architectures. A controller enforcing
+τ ≤ ρ\_a survives 10,000× LR spikes where gradient clipping collapses.
 
-## Tested baseline
+![Phase transition at r = 1](assets/teaser.png)
+*Test accuracy retained after one gradient step. All architectures
+collapse once the normalized step r = τ/ρ\_a exceeds 1.*
 
-The current checked baseline is:
-
-- Python `3.12`
-- PyTorch `2.10.0`
-- torchvision `0.25.0`
-- NumPy `1.26.4`
-- Matplotlib `3.10.8`
-- scikit-learn `1.5.2`
-
-For a pinned install set, see `requirements.txt`.
-
-## Validation
-
-Unit and contract tests:
+## Install
 
 ```bash
-pytest
+pip install -r requirements.txt
+pip install --no-build-isolation -e .
 ```
 
-End-to-end smoke runs for selected experiments:
+## Reproduce Paper Figures
 
-```bash
-GHOSTS_RUN_SMOKE=1 pytest tests/test_smoke_runs.py -q
-```
+| Figure | Description | Notebook | Colab | Runtime |
+|--------|-------------|----------|-------|---------|
+| Fig 1 | Phase transition | [`fig1.ipynb`](notebooks/fig1.ipynb) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/fig1.ipynb) | ~5 min |
+| Fig 7 | JVP phase transition | [`fig7.ipynb`](notebooks/fig7.ipynb) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/fig7.ipynb) | ~5 min |
+| Fig 9 | Temperature fingerprint | [`fig9.ipynb`](notebooks/fig9.ipynb) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/fig9.ipynb) | ~10 min |
+| Fig 10 | Architecture grid | [`fig10.ipynb`](notebooks/fig10.ipynb) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/fig10.ipynb) | ~15 min |
+| ResNet-18 | CIFAR-10 instability | [`resnet18.ipynb`](notebooks/resnet18.ipynb) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/resnet18.ipynb) | ~30 min |
 
-Notebook execution:
+## Tutorials
 
-```bash
-jupyter nbconvert --to notebook --execute tutorials/01_binary_radius.ipynb --output /tmp/01_binary_radius.executed.ipynb
-jupyter nbconvert --to notebook --execute tutorials/02_kl_bound.ipynb --output /tmp/02_kl_bound.executed.ipynb
-jupyter nbconvert --to notebook --execute tutorials/03_rho_controller.ipynb --output /tmp/03_rho_controller.executed.ipynb
-```
+| Notebook | Topic |
+|----------|-------|
+| [`01_binary_radius.ipynb`](tutorials/01_binary_radius.ipynb) | Binary softmax convergence radius |
+| [`02_kl_bound.ipynb`](tutorials/02_kl_bound.ipynb) | KL divergence bound |
+| [`03_rho_controller.ipynb`](tutorials/03_rho_controller.ipynb) | Rho-adaptive controller |
 
 ## Experiments
 
-Each experiment has a canonical `run.py`. Some also provide separate plotting
-entry points:
+Each experiment has a canonical `run.py`:
 
 | Directory | Paper result |
 |-----------|-------------|
 | `experiments/phasetransition/` | Phase transition at r = 1 |
-| `experiments/randomdirs/` | Random-direction validation |
 | `experiments/lrspike/` | LR spike controller comparison |
 | `experiments/tempfingerprint/` | Temperature-scaling fingerprint |
 | `experiments/archgrid/` | Cross-architecture spike comparison |
 | `experiments/tfmbottlenecks/` | Transformer bottleneck analysis |
 | `experiments/resnetnatural/` | ResNet-18/CIFAR-10 natural instability |
-
-Example:
+| `experiments/randomdirs/` | Random-direction validation |
 
 ```bash
 python experiments/phasetransition/run.py
 python experiments/phasetransition/plot.py
 ```
 
-For experiments without a dedicated `plot.py`, the experiment README is the
-source of truth for expected outputs and how results are summarized.
-
-## Core library
+## Core Library
 
 `src/ghosts/` contains reusable modules:
 
@@ -82,6 +71,24 @@ source of truth for expected outputs and how results are summarized.
 - `models.py` — small transformer
 - `theory.py` — KL divergence bound
 - `hooks.py` — model instrumentation
+
+## Validation
+
+```bash
+pytest
+GHOSTS_RUN_SMOKE=1 pytest tests/test_smoke_runs.py -q
+```
+
+## Citation
+
+```bibtex
+@article{ghosts2025,
+  title   = {Ghosts of Softmax: When Complex Zeros Cap the Convergence Radius},
+  author  = {Piyush Kumar},
+  year    = {2026},
+  journal = {arXiv preprint arXiv:2503.XXXXX},
+}
+```
 
 ## License
 
