@@ -6,42 +6,50 @@
 > **Ghosts of Softmax: Complex Singularities That Limit Safe Step Sizes in Cross-Entropy**
 > [[arXiv]](https://arxiv.org/abs/2503.XXXXX)
 
-Training in deep learning can still fail suddenly, even though we have spent a
-lot of effort studying losses, curvature, and optimizers. The standard defense
-is local analysis: replace the true loss by a local Taylor
-approximation and ask whether that approximation goes down after a step. The
-problem is that a Taylor approximation is only trustworthy inside its radius of
-convergence. Inside that radius, local analysis can be useful. Outside it, the
-Taylor series may no longer track the true loss, so a step that looks safe from
-first-, second-, or even third-order information can still be unsafe for the
-real objective.
+Large-scale training still suffers abrupt instabilities despite
+decades of work on loss geometry, curvature, and optimizer design. A
+common approach is to analyze a local Taylor surrogate of the loss
+and derive conditions for its decrease. But a basic gap remains: a
+Taylor expansion is only meaningful inside its radius of convergence.
+Inside that radius, local surrogate arguments can be informative.
+Outside it, the Taylor series no longer tracks the true function, so
+guarantees for the surrogate may not apply to the actual loss.
 
-This question is usually ignored because the radius of convergence is hard to
-compute directly. In deep learning, even first- and second-order quantities are
-already expensive, so reasoning about all higher derivatives is usually out of
-reach. Instead of trying to control the full Taylor series from real-line
-derivatives, this project uses a different idea from complex analysis: the
-radius of convergence is determined by the nearest singularity in the complex
-plane.
+This issue is easy to miss in deep learning because the radius of
+convergence is hard to access from the real line. The standard way
+to control Taylor convergence is to bound the full infinite series,
+for instance through derivative growth rates or comparison to a
+geometric series. For neural networks, even first- and second-order
+information is expensive and incomplete, making direct reasoning
+about higher derivatives impractical. As a result, optimization
+analyses often rely on low-order local models without checking if
+the underlying Taylor series is valid at the proposed step.
 
-For cross-entropy training, those singularities come from complex zeros of the
-softmax partition function — the "ghosts" of the title. Under a logit-linearization assumption, this gives
-a practical way to estimate a local convergence radius from quantities we can
-compute cheaply, such as finite differences or Jacobian--vector products. That
-leads to a simple question for any proposed update: is this step still inside
-the local convergence radius, or has it already gone beyond the region where
-Taylor-based reasoning is reliable? The experiments in this repository test
-that question empirically.
+This work takes a different route. Instead of estimating convergence
+from higher real derivatives, we use the Cauchy--Hadamard viewpoint:
+the convergence radius of a Taylor series is set by the nearest
+singularity in the complex plane. For cross-entropy training, these
+singularities arise from complex zeros of the softmax partition
+function. Under logit linearization, this leads to closed-form and
+interpretable radius estimates. Specifically, the paper shows how to
+bound the convergence radius from directional logit derivatives, and
+why this provides a safety criterion fundamentally different from
+Hessian-based smoothness.
 
-This repository is the code companion to the paper. It is designed to help
-newcomers understand the idea step by step. The tutorials explain the basic
-radius calculations, the notebooks reproduce the main paper figures, and the
-experiment scripts show how to use a radius-based controller in practice. The
-controller is simple: if an optimizer proposes a step that is larger than the
-estimated local convergence radius, rescale the step so it stays within that
-radius.
+To make this analysis concrete and reproducible, this repository
+provides tutorials, notebooks, and experiment scripts for:
+- Estimating the convergence radius using finite differences or
+  Jacobian--vector products.
+- Reproducing the main figures from the paper.
+- Incorporating a radius-based step-size controller into practical
+  optimizers (SGD, momentum SGD, Adam).
 
-![Phase transition at r = 1](assets/teaser.png)
+The controller's idea is simple: a proposed update step should not
+exceed the local convergence radius. If the underlying optimizer
+proposes a larger step, the controller rescales it to remain inside
+the safe region suggested by the theory.
+
+<img src="assets/teaser.png" alt="Phase transition at r = 1" width="75%">
 *Test accuracy retained after one gradient step. All architectures
 collapse once the normalized step r = τ/ρ_a exceeds 1.*
 
