@@ -3,22 +3,50 @@
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/fig1.ipynb)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Ghosts of Softmax: When Complex Zeros Cap the Convergence Radius**
+> **Ghosts of Softmax: Complex Singularities That Limit Safe Step Sizes in Cross-Entropy**
 > [[arXiv]](https://arxiv.org/abs/2503.XXXXX)
 
-The softmax partition function has complex zeros that cap the Taylor
-convergence radius of cross-entropy loss. Beyond that radius, local
-surrogates need not track the true loss, so descent guarantees become
-unreliable. We derive closed-form expressions for this radius and show
-that the normalized step size r = τ/ρ\_a cleanly separates safe from
-dangerous updates across six architectures. A controller enforcing
-τ ≤ ρ\_a survives 10,000× LR spikes where gradient clipping collapses.
+Training in deep learning can still fail suddenly, even though we have spent a
+lot of effort studying losses, curvature, and optimizers. A common way to
+analyze optimization is to replace the true loss by a local Taylor
+approximation and ask whether that approximation goes down after a step. The
+problem is that a Taylor approximation is only trustworthy inside its radius of
+convergence. Inside that radius, local analysis can be useful. Outside it, the
+Taylor series may no longer track the true loss, so a step that looks safe from
+first-, second-, or even third-order information can still be unsafe for the
+real objective.
+
+This question is usually ignored because the radius of convergence is hard to
+compute directly. In deep learning, even first- and second-order quantities are
+already expensive, so reasoning about all higher derivatives is usually out of
+reach. Instead of trying to control the full Taylor series from real-line
+derivatives, this project uses a different idea from complex analysis: the
+radius of convergence is determined by the nearest singularity in the complex
+plane.
+
+For cross-entropy training, those singularities come from complex zeros of the
+softmax partition function. Under a logit-linearization assumption, this gives
+a practical way to estimate a local convergence radius from quantities we can
+compute cheaply, such as finite differences or Jacobian--vector products. That
+leads to a simple question for any proposed update: is this step still inside
+the local convergence radius, or has it already gone beyond the region where
+Taylor-based reasoning is reliable?
+
+This repository is the code companion to the paper. It is designed to help
+newcomers understand the idea step by step. The tutorials explain the basic
+radius calculations, the notebooks reproduce the main paper figures, and the
+experiment scripts show how to use a radius-based controller in practice. The
+controller is simple: if an optimizer proposes a step that is larger than the
+estimated local convergence radius, rescale the step so it stays within that
+radius.
 
 ![Phase transition at r = 1](assets/teaser.png)
 *Test accuracy retained after one gradient step. All architectures
-collapse once the normalized step r = τ/ρ\_a exceeds 1.*
+collapse once the normalized step r = τ/ρ_a exceeds 1.*
 
 ## Install
+
+Requires Python 3.10+. GPU optional but recommended for experiment scripts.
 
 ```bash
 pip install -r requirements.txt
@@ -32,16 +60,11 @@ Use the repo in one of three ways:
 1. Reproduce a headline result quickly.
 
    Start with [`notebooks/fig1.ipynb`](notebooks/fig1.ipynb), which reproduces
-   the phase transition at `r = \tau / \rho_a \approx 1` in a lightweight
-   setting.
+   the phase transition near r = 1 in a lightweight setting.
 
 2. Learn the ideas in order.
 
-   Work through the tutorials:
-
-   - [`tutorials/01_binary_radius.ipynb`](tutorials/01_binary_radius.ipynb)
-   - [`tutorials/02_kl_bound.ipynb`](tutorials/02_kl_bound.ipynb)
-   - [`tutorials/03_rho_controller.ipynb`](tutorials/03_rho_controller.ipynb)
+   Work through the [tutorials](#tutorials) in sequence.
 
 3. Run the experiment scripts directly.
 
@@ -109,9 +132,9 @@ python experiments/phasetransition/run.py
 ## Citation
 
 ```bibtex
-@article{ghosts2025,
-  title   = {Ghosts of Softmax: When Complex Zeros Cap the Convergence Radius},
-  author  = {Piyush Kumar},
+@article{ghosts2026,
+  title   = {Ghosts of Softmax: Complex Singularities That Limit Safe Step Sizes in Cross-Entropy},
+  author  = {Piyush Sao},
   year    = {2026},
   journal = {arXiv preprint arXiv:2503.XXXXX},
 }

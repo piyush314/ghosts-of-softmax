@@ -1,17 +1,17 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite the paper."
-title: "Ghosts of Softmax: When Complex Zeros Cap the Convergence Radius"
+title: "Ghosts of Softmax: Complex Singularities That Limit Safe Step Sizes in Cross-Entropy"
 authors:
-  - family-names: Kumar
+  - family-names: Sao
     given-names: Piyush
 type: article
 date-released: 2026-03-13
 url: "https://github.com/piyush314/ghosts-of-softmax"
 preferred-citation:
   type: article
-  title: "Ghosts of Softmax: When Complex Zeros Cap the Convergence Radius"
+  title: "Ghosts of Softmax: Complex Singularities That Limit Safe Step Sizes in Cross-Entropy"
   authors:
-    - family-names: Kumar
+    - family-names: Sao
       given-names: Piyush
   year: 2026
   journal: "arXiv preprint arXiv:2503.XXXXX"
