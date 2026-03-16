@@ -34,7 +34,7 @@
       "smoke"
     ],
     "expected_artifacts": [
-      "cache/archgrid_multiseed_smoke.pt",
+      "experiments/archgrid/cache/archgrid_multiseed_smoke.pt",
       "experiments/archgrid/results/archgrid-jvp-twocol_smoke.png",
       "experiments/archgrid/results/archgrid-jvp-twocol_smoke.pdf",
       "experiments/archgrid/results/summary_smoke.json"
@@ -59,7 +59,7 @@
     "auto"
   ],
   "artifacts": [
-    "cache/archgrid_multiseed.pt",
+    "experiments/archgrid/cache/archgrid_multiseed.pt",
     "experiments/archgrid/results/archgrid-jvp-twocol.png",
     "experiments/archgrid/results/archgrid-jvp-twocol.pdf",
     "experiments/archgrid/results/summary.json"

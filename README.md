@@ -25,6 +25,39 @@ pip install -r requirements.txt
 pip install --no-build-isolation -e .
 ```
 
+## Start Here
+
+Use the repo in one of three ways:
+
+1. Reproduce a headline result quickly.
+
+   Start with [`notebooks/fig1.ipynb`](notebooks/fig1.ipynb), which reproduces
+   the phase transition at `r = \tau / \rho_a \approx 1` in a lightweight
+   setting.
+
+2. Learn the ideas in order.
+
+   Work through the tutorials:
+
+   - [`tutorials/01_binary_radius.ipynb`](tutorials/01_binary_radius.ipynb)
+   - [`tutorials/02_kl_bound.ipynb`](tutorials/02_kl_bound.ipynb)
+   - [`tutorials/03_rho_controller.ipynb`](tutorials/03_rho_controller.ipynb)
+
+3. Run the experiment scripts directly.
+
+   Start with [`experiments/phasetransition/run.py`](experiments/phasetransition/run.py)
+   or [`experiments/lrspike/run.py`](experiments/lrspike/run.py), then use the
+   experiment contracts and READMEs to scale up to the full paper runs.
+
+## Validation
+
+Check the install before running heavier experiments:
+
+```bash
+pytest
+GHOSTS_RUN_SMOKE=1 pytest tests/test_smoke_runs.py -q
+```
+
 ## Reproduce Paper Figures
 
 | Figure | Description | Notebook | Colab | Runtime |
@@ -45,7 +78,9 @@ pip install --no-build-isolation -e .
 
 ## Experiments
 
-Each experiment has a canonical `run.py`:
+Each experiment has a canonical `run.py`. Some also include separate plotting
+scripts or notebook entry points; the experiment README and `contract.json` are
+the source of truth for outputs and reproduction commands.
 
 | Directory | Paper result |
 |-----------|-------------|
@@ -59,7 +94,6 @@ Each experiment has a canonical `run.py`:
 
 ```bash
 python experiments/phasetransition/run.py
-python experiments/phasetransition/plot.py
 ```
 
 ## Core Library
@@ -71,13 +105,6 @@ python experiments/phasetransition/plot.py
 - `models.py` — small transformer
 - `theory.py` — KL divergence bound
 - `hooks.py` — model instrumentation
-
-## Validation
-
-```bash
-pytest
-GHOSTS_RUN_SMOKE=1 pytest tests/test_smoke_runs.py -q
-```
 
 ## Citation
 

@@ -32,7 +32,7 @@
       "smoke"
     ],
     "expected_artifacts": [
-      "cache/fingerprint_multiseed_smoke.pt",
+      "experiments/tempfingerprint/cache/fingerprint_multiseed_smoke.pt",
       "experiments/tempfingerprint/results/theory-fingerprint-tests_v4_smoke.png",
       "experiments/tempfingerprint/results/theory-fingerprint-tests_v4_smoke.pdf",
       "experiments/tempfingerprint/results/summary_smoke.json"
@@ -55,7 +55,7 @@
     "auto"
   ],
   "artifacts": [
-    "cache/fingerprint_multiseed.pt",
+    "experiments/tempfingerprint/cache/fingerprint_multiseed.pt",
     "experiments/tempfingerprint/results/theory-fingerprint-tests_v4.png",
     "experiments/tempfingerprint/results/theory-fingerprint-tests_v4.pdf",
     "experiments/tempfingerprint/results/summary.json"

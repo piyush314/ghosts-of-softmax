@@ -40,7 +40,7 @@
       "smoke"
     ],
     "expected_artifacts": [
-      "cache/resnet18_instability_multiseed_smoke.pt",
+      "experiments/resnetnatural/cache/resnet18_instability_multiseed_smoke.pt",
       "experiments/resnetnatural/results/resnet18-instability-multiseed_smoke.png",
       "experiments/resnetnatural/results/resnet18-instability-multiseed_smoke.pdf",
       "experiments/resnetnatural/results/summary_smoke.json"
@@ -65,7 +65,7 @@
     "auto"
   ],
   "artifacts": [
-    "cache/resnet18_instability_multiseed.pt",
+    "experiments/resnetnatural/cache/resnet18_instability_multiseed.pt",
     "experiments/resnetnatural/results/resnet18-instability-multiseed.png",
     "experiments/resnetnatural/results/resnet18-instability-multiseed.pdf",
     "experiments/resnetnatural/results/summary.json"

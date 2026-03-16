@@ -34,7 +34,7 @@
       "smoke"
     ],
     "expected_artifacts": [
-      "cache/lrsweep_multiseed_smoke.pt",
+      "experiments/lrspike/cache/lrsweep_multiseed_smoke.pt",
       "experiments/lrspike/results/lrsweep-jvp-multiseed_smoke.png",
       "experiments/lrspike/results/lrsweep-jvp-multiseed_smoke.pdf",
       "experiments/lrspike/results/summary_smoke.json"
@@ -57,7 +57,7 @@
     "auto"
   ],
   "artifacts": [
-    "cache/lrsweep_multiseed.pt",
+    "experiments/lrspike/cache/lrsweep_multiseed.pt",
     "experiments/lrspike/results/lrsweep-jvp-multiseed.png",
     "experiments/lrspike/results/lrsweep-jvp-multiseed.pdf",
     "experiments/lrspike/results/summary.json"
