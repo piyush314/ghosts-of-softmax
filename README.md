@@ -91,6 +91,7 @@ GHOSTS_RUN_SMOKE=1 pytest tests/test_smoke_runs.py -q
 | Fig 9 | Temperature fingerprint | [`fig9.ipynb`](notebooks/fig9.ipynb) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/fig9.ipynb) | ~10 min |
 | Fig 10 | Architecture grid | [`fig10.ipynb`](notebooks/fig10.ipynb) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/fig10.ipynb) | ~15 min |
 | ResNet-18 | CIFAR-10 instability | [`resnet18.ipynb`](notebooks/resnet18.ipynb) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/resnet18.ipynb) | ~30 min |
+| Ghost envelope | Re/Im scatter + bands | [`ghostenvelope.ipynb`](notebooks/ghostenvelope.ipynb) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/ghostenvelope.ipynb) | ~10 min |
 
 ## Tutorials
 
@@ -114,6 +115,7 @@ the source of truth for outputs and reproduction commands.
 | `experiments/archgrid/` | Cross-architecture spike comparison |
 | `experiments/tfmbottlenecks/` | Transformer bottleneck analysis |
 | `experiments/resnetnatural/` | ResNet-18/CIFAR-10 natural instability |
+| `experiments/ghostenvelope/` | Ghost envelope visualization |
 | `experiments/randomdirs/` | Random-direction validation |
 
 ```bash

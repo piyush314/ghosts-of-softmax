@@ -1,0 +1,35 @@
+{
+  "contract_version": 1,
+  "id": "ghostenvelope",
+  "title": "Ghost Envelope Experiment",
+  "paper_result": "Ghost Re/Im scatter with envelope bands across training",
+  "dataset": "sklearn digits",
+  "entry_point": "run.py",
+  "smoke_test": {
+    "kind": "help",
+    "args": ["--help"]
+  },
+  "smoke_run": {
+    "kind": "command",
+    "command": [
+      "python", "run.py",
+      "--smoke",
+      "--seeds", "0",
+      "--tag", "smoke"
+    ],
+    "expected_artifacts": [
+      "experiments/ghostenvelope/cache/ghostenvelope_smoke.pt",
+      "experiments/ghostenvelope/results/ghost-envelope_smoke.png",
+      "experiments/ghostenvelope/results/ghost-envelope_smoke.pdf"
+    ]
+  },
+  "canonical_command": [
+    "python", "run.py",
+    "--seeds", "0"
+  ],
+  "artifacts": [
+    "experiments/ghostenvelope/cache/ghostenvelope.pt",
+    "experiments/ghostenvelope/results/ghost-envelope.png",
+    "experiments/ghostenvelope/results/ghost-envelope.pdf"
+  ]
+}
