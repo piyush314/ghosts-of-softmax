@@ -49,7 +49,10 @@ exceed the local convergence radius. If the underlying optimizer
 proposes a larger step, the controller rescales it to remain inside
 the safe region suggested by the theory.
 
+<img src="assets/infographic.png" alt="Ghosts of Softmax — overview" width="85%">
+
 <img src="assets/teaser.png" alt="Phase transition at r = 1" width="75%">
+
 *Test accuracy retained after one gradient step. All architectures
 collapse once the normalized step r = τ/ρ_a exceeds 1.*
 
