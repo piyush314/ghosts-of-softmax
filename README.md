@@ -71,11 +71,12 @@ Use the repo in one of three ways:
 
 1. Learn the controller idea first.
 
-   Start with [`tutorials/00_step_controller_intro.ipynb`](tutorials/00_step_controller_intro.ipynb).
+   Start with [`tutorials/00_step_controller_intro.ipynb`](tutorials/00_step_controller_intro.ipynb)
+   [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/tutorials/00_step_controller_intro.ipynb).
    This notebook shows, on a small digits classification problem, how a batch
    JVP estimate of `rho` changes a standard SGD step. It compares:
-   - fixed SGD with two learning rates,
-   - rho-capped SGD with the same two learning rates,
+   - fixed SGD with three learning rates,
+   - rho-capped SGD with the same three learning rates,
    - one rho-set SGD run driven entirely by local geometry.
    It first focuses on loss and accuracy, then shows how effective learning
    rate and normalized step size evolve during training.
@@ -122,7 +123,7 @@ GHOSTS_RUN_SMOKE=1 pytest tests/test_smoke_runs.py -q
 | [`00_step_controller_intro.ipynb`](tutorials/00_step_controller_intro.ipynb) | First tutorial: fixed SGD vs rho-capped SGD vs rho-set SGD |
 | [`01_binary_radius.ipynb`](tutorials/01_binary_radius.ipynb) | Binary softmax convergence radius |
 | [`02_kl_bound.ipynb`](tutorials/02_kl_bound.ipynb) | KL divergence bound |
-| [`03_rho_controller.ipynb`](tutorials/03_rho_controller.ipynb) | Rho-adaptive controller |
+| [`03_rho_controller.ipynb`](tutorials/03_rho_controller.ipynb) | Adam tutorial: fixed Adam vs rho-scaled Adam |
 
 ## Experiments
 
