@@ -69,16 +69,27 @@ pip install --no-build-isolation -e .
 
 Use the repo in one of three ways:
 
-1. Reproduce a headline result quickly.
+1. Learn the controller idea first.
+
+   Start with [`tutorials/00_step_controller_intro.ipynb`](tutorials/00_step_controller_intro.ipynb).
+   This notebook shows, on a small digits classification problem, how a batch
+   JVP estimate of `rho` changes a standard SGD step. It compares:
+   - fixed SGD with two learning rates,
+   - rho-capped SGD with the same two learning rates,
+   - one rho-set SGD run driven entirely by local geometry.
+   It first focuses on loss and accuracy, then shows how effective learning
+   rate and normalized step size evolve during training.
+
+2. Reproduce a headline result quickly.
 
    Start with [`notebooks/fig1.ipynb`](notebooks/fig1.ipynb), which reproduces
-   the phase transition near r = 1 in a lightweight setting.
+   the phase transition near `r = 1` in a lightweight setting.
 
-2. Learn the ideas in order.
+3. Learn the ideas in order.
 
    Work through the [tutorials](#tutorials) in sequence.
 
-3. Run the experiment scripts directly.
+4. Run the experiment scripts directly.
 
    Start with [`experiments/phasetransition/run.py`](experiments/phasetransition/run.py)
    or [`experiments/lrspike/run.py`](experiments/lrspike/run.py), then use the
@@ -108,6 +119,7 @@ GHOSTS_RUN_SMOKE=1 pytest tests/test_smoke_runs.py -q
 
 | Notebook | Topic |
 |----------|-------|
+| [`00_step_controller_intro.ipynb`](tutorials/00_step_controller_intro.ipynb) | First tutorial: fixed SGD vs rho-capped SGD vs rho-set SGD |
 | [`01_binary_radius.ipynb`](tutorials/01_binary_radius.ipynb) | Binary softmax convergence radius |
 | [`02_kl_bound.ipynb`](tutorials/02_kl_bound.ipynb) | KL divergence bound |
 | [`03_rho_controller.ipynb`](tutorials/03_rho_controller.ipynb) | Rho-adaptive controller |
