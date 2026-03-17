@@ -81,6 +81,17 @@ Use the repo in one of three ways:
    It first focuses on loss and accuracy, then shows how effective learning
    rate and normalized step size evolve during training.
 
+   Before moving on, check your understanding: try to write down the same
+   controller equation for SGD with momentum and for Adam. The key idea is to
+   replace the plain SGD step by the actual step proposed by the optimizer,
+   then compare that step length to `rho`.
+
+   Then continue with:
+   - [`tutorials/01_adam_controller.ipynb`](tutorials/01_adam_controller.ipynb)
+     [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/tutorials/01_adam_controller.ipynb)
+   - [`tutorials/02_momentum_controller.ipynb`](tutorials/02_momentum_controller.ipynb)
+     [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/tutorials/02_momentum_controller.ipynb)
+
 2. Reproduce a headline result quickly.
 
    Start with [`notebooks/fig1.ipynb`](notebooks/fig1.ipynb), which reproduces
