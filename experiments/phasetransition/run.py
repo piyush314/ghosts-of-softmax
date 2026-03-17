@@ -33,6 +33,7 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
+from ghosts.plotting import PALETTE, add_end_labels, apply_plot_style, finish_figure
 from ghosts.reporting import repo_relpath, write_summary
 
 FIG_DIR = Path(__file__).resolve().parent / "results"
@@ -50,26 +51,7 @@ EVAL_INTERVAL = 10
 
 R_VALUES = np.logspace(-3, np.log10(35.0), 42)
 
-PALETTE = {
-    "red": "#E3120B",
-    "blue": "#006BA2",
-    "green": "#2E8B57",
-    "gray": "#D0D0D0",
-    "dark": "#3D3D3D",
-}
-
-plt.rcParams.update(
-    {
-        "font.family": "sans-serif",
-        "font.sans-serif": ["Arial", "Helvetica Neue", "DejaVu Sans"],
-        "font.size": 10,
-        "axes.titlesize": 11,
-        "axes.titleweight": "bold",
-        "axes.spines.top": False,
-        "axes.spines.right": False,
-        "grid.alpha": 0.3,
-    }
-)
+apply_plot_style(font_size=10, title_size=11, label_size=10, tick_size=9)
 
 
 def load_digits_csv() -> Tuple[np.ndarray, np.ndarray]:
@@ -386,7 +368,7 @@ def main() -> None:
             )
 
     # Aggregate and plot.
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5.6), sharey=True)
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5.8), sharey=True)
     summary_lines = []
     for j, stage in enumerate(STAGE_NAMES):
         ax = axes[j]
@@ -401,7 +383,7 @@ def main() -> None:
 
         # show per-seed random-median as faint gray for reproducibility texture
         for k in range(rand_med_curves.shape[0]):
-            ax.plot(R_VALUES, rand_med_curves[k], color=PALETTE["gray"], lw=1.0, alpha=0.45, zorder=1)
+            ax.plot(R_VALUES, rand_med_curves[k], color=PALETTE["light_gray"], lw=1.0, alpha=0.45, zorder=1)
 
         ax.plot(R_VALUES, grad_med, color=PALETTE["red"], lw=2.6, label="gradient", zorder=3)
         ax.plot(R_VALUES, rand_med, color=PALETTE["blue"], lw=2.6, label="median random", zorder=4)
@@ -444,15 +426,32 @@ def main() -> None:
             ax.set_ylabel("Loss ratio")
         ax.grid(True, which="both", alpha=0.25)
         ax.set_title(f"{stage} (acc≈{np.median(acc_arr):.2f})", loc="center")
-        ax.legend(loc="upper left", fontsize=9, frameon=True, framealpha=0.85)
+        add_end_labels(
+            ax,
+            R_VALUES,
+            [
+                (grad_med[-1], "gradient", PALETTE["red"], "bold"),
+                (rand_med[-1], "median random", PALETTE["blue"], None),
+                (h_median, f"2/κ ≈ {h_median:.1f}×ρ_a", PALETTE["green"], None),
+            ],
+            fontsize=8,
+        )
 
     fig.suptitle(
-        "Reproducibility Check: Loss Inflation Onset vs r = tau/rho_a (random directions, multi-seed)",
+        "Across checkpoints, loss inflation turns sharply once the normalized step reaches the analytic radius",
         fontsize=13,
         fontweight="bold",
-        y=1.02,
+        y=0.98,
     )
-    fig.tight_layout()
+    fig.text(
+        0.08,
+        0.92,
+        "Each panel aggregates seeds at a different training stage; the boundary at r = 1 remains the dominant onset threshold.",
+        fontsize=10,
+        color=PALETTE["mid_gray"],
+        ha="left",
+    )
+    finish_figure(fig, rect=[0, 0, 1, 0.90])
     fig_path = FIG_DIR / "exp10_phase_repro_randomdirs.png"
     fig.savefig(fig_path, dpi=220, bbox_inches="tight")
     plt.close(fig)

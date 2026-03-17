@@ -43,16 +43,8 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
+from ghosts.plotting import PALETTE, add_end_labels, add_subtitle, apply_plot_style, finish_figure
 from ghosts.reporting import repo_relpath, scalar_stats, write_summary
-
-PALETTE = {
-    0.25: "#7B1FA2",
-    0.5: "#2E7D32",
-    1.0: "#006BA2",
-    2.0: "#F4A100",
-    4.0: "#D84315",
-    8.0: "#5D4037",
-}
 
 
 def load_digits() -> Tuple[np.ndarray, np.ndarray]:
@@ -211,28 +203,42 @@ def run_experiment(seeds: List[int], temps: List[float], train_steps: int,
 
 def make_plot(data: Dict, temps: List[float], out_png: Path, out_pdf: Path) -> None:
     """Plot median+IQR for raw tau and scaled r_T."""
-    plt.rcParams.update({
-        "font.family": "sans-serif",
-        "font.sans-serif": ["Arial", "Helvetica Neue", "DejaVu Sans"],
-        "font.size": 10,
-        "axes.spines.top": False,
-        "axes.spines.right": False,
-    })
+    apply_plot_style(font_size=10, title_size=13, label_size=10, tick_size=9)
+    temp_colors = {
+        0.25: PALETTE["purple"],
+        0.5: PALETTE["green"],
+        1.0: PALETTE["blue"],
+        2.0: PALETTE["gold"],
+        4.0: PALETTE["teal"],
+        8.0: PALETTE["red"],
+    }
 
     # Common r_scaled grid for interpolation
     r_grid = np.geomspace(1e-3, 10.0, 200)
 
     fig, axes = plt.subplots(1, 2, figsize=(11.8, 4.1))
     fig.subplots_adjust(top=0.80, wspace=0.25)
-    fig.suptitle("Temperature Fingerprint: Multi-seed Median+IQR", fontsize=13,
-                 fontweight="bold")
+    fig.suptitle(
+        "Temperature scaling changes raw step size, but the scaled stability coordinate collapses the curves",
+        fontsize=13,
+        fontweight="bold",
+    )
+    fig.text(
+        0.125,
+        0.90,
+        "Median and IQR across seeds. Left: raw tau. Right: the theory-normalized coordinate.",
+        fontsize=10,
+        color=PALETTE["mid_gray"],
+        ha="left",
+    )
 
     seeds = list(data.keys())
 
     # Panel A: Raw tau
     ax = axes[0]
+    raw_label_specs = []
     for t in temps:
-        color = PALETTE.get(t, "#333333")
+        color = temp_colors[t]
         # Gather curves from all seeds
         all_tau = []
         all_loss = []
@@ -257,20 +263,23 @@ def make_plot(data: Dict, temps: List[float], out_png: Path, out_pdf: Path) -> N
         q75 = np.percentile(interp_loss, 75, axis=0)
 
         ax.fill_between(tau_grid, q25, q75, alpha=0.2, color=color)
-        ax.plot(tau_grid, med, color=color, lw=2, label=f"T={t:g}")
+        ax.plot(tau_grid, med, color=color, lw=2)
+        raw_label_specs.append((med[-1], f"T={t:g}", color, None))
 
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel(r"Raw step size $\tau$")
     ax.set_ylabel("One-step loss ratio")
-    ax.set_title("A) Raw tau (curves spread)", loc="left", fontweight="bold")
+    ax.set_title("Raw step size spreads the curves", loc="left", fontweight="bold")
+    add_subtitle(ax, "Higher temperature shifts the same instability pattern to larger raw tau.", fontsize=9)
     ax.grid(True, alpha=0.3, which="both")
-    ax.legend(frameon=False, fontsize=9)
+    add_end_labels(ax, tau_grid, raw_label_specs, fontsize=8)
 
     # Panel B: Scaled r_T
     ax = axes[1]
+    scaled_label_specs = []
     for t in temps:
-        color = PALETTE.get(t, "#333333")
+        color = temp_colors[t]
         # Interpolate to common r_grid
         interp_loss = []
         for seed in seeds:
@@ -291,18 +300,20 @@ def make_plot(data: Dict, temps: List[float], out_png: Path, out_pdf: Path) -> N
         valid_mask = ~np.isnan(med)
         ax.fill_between(r_grid[valid_mask], q25[valid_mask], q75[valid_mask],
                         alpha=0.2, color=color)
-        ax.plot(r_grid[valid_mask], med[valid_mask], color=color, lw=2,
-                label=f"T={t:g}")
+        ax.plot(r_grid[valid_mask], med[valid_mask], color=color, lw=2)
+        scaled_label_specs.append((med[valid_mask][-1], f"T={t:g}", color, None))
 
-    ax.axvline(1.0, color="#888", ls="--", lw=1, alpha=0.7)
+    ax.axvline(1.0, color=PALETTE["mid_gray"], ls="--", lw=1, alpha=0.7)
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel(r"Scaled step $r_T = \tau\Delta_a/(\pi T)$")
     ax.set_ylabel("One-step loss ratio")
-    ax.set_title("B) Scaled r_T (curves collapse)", loc="left", fontweight="bold")
+    ax.set_title("The scaled coordinate collapses the curves", loc="left", fontweight="bold")
+    add_subtitle(ax, "After normalization, the loss-ratio onset lines up near the same boundary.", fontsize=9)
     ax.grid(True, alpha=0.3, which="both")
-    ax.legend(frameon=False, fontsize=9)
+    add_end_labels(ax, r_grid, scaled_label_specs, fontsize=8)
 
+    finish_figure(fig, rect=[0, 0, 1, 0.90])
     fig.savefig(out_pdf, dpi=300, bbox_inches="tight")
     fig.savefig(out_png, dpi=180, bbox_inches="tight")
     plt.close(fig)

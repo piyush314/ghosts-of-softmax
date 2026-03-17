@@ -50,17 +50,8 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
+from ghosts.plotting import PALETTE, apply_plot_style, finish_figure, format_percent_axis
 from ghosts.reporting import repo_relpath, scalar_stats, write_summary
-
-PALETTE = {
-    'red': '#E3120B',
-    'gold': '#F4A100',
-    'green': '#00843D',
-    'blue': '#1E5AA8',
-    'dark': '#3D3D3D',
-    'mid': '#767676',
-    'light': '#D0D0D0',
-}
 
 
 def load_digits_from_csv() -> Tuple[np.ndarray, np.ndarray]:
@@ -293,17 +284,7 @@ def make_plot(
     out_png: Path,
     out_pdf: Path,
 ):
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Helvetica Neue', 'DejaVu Sans'],
-        'font.size': 11,
-        'axes.titlesize': 12,
-        'axes.titleweight': 'bold',
-        'axes.spines.top': False,
-        'axes.spines.right': False,
-        'axes.edgecolor': PALETTE['dark'],
-        'axes.linewidth': 0.8,
-    })
+    apply_plot_style(font_size=11, title_size=12, label_size=11, tick_size=10)
 
     MESSAGES = {
         '1e-04': 'Adam recovers — spike stays within safe radius',
@@ -316,8 +297,20 @@ def make_plot(
                            hspace=0.05, wspace=0.28)
     fig.subplots_adjust(top=0.90, bottom=0.07, left=0.09, right=0.97)
 
-    fig.suptitle('Learning Rate Spike Test: Plain Adam vs ρ-Controller (multi-seed)',
-                 fontsize=15, fontweight='bold', y=0.97)
+    fig.suptitle(
+        'Large spikes erase standard Adam, while the rho controller stays inside the safe radius',
+        fontsize=15,
+        fontweight='bold',
+        y=0.97,
+    )
+    fig.text(
+        0.09,
+        0.948,
+        'Each row fixes a different base learning rate; the right panel compares the proposed step to the analytic radius.',
+        fontsize=10,
+        color=PALETTE['mid_gray'],
+        ha='left',
+    )
 
     fig.text(0.30, 0.925, '— Plain Adam', fontsize=11, color=PALETTE['red'],
              fontweight='bold', ha='left')
@@ -327,11 +320,11 @@ def make_plot(
              color=PALETTE['green'], ha='left')
 
     fig.text(0.22, 0.895, 'Training Loss', fontsize=12, fontweight='bold',
-             ha='center', color=PALETTE['dark'])
+             ha='center', color=PALETTE['dark_gray'])
     fig.text(0.53, 0.895, 'Test Accuracy', fontsize=12, fontweight='bold',
-             ha='center', color=PALETTE['dark'])
+             ha='center', color=PALETTE['dark_gray'])
     fig.text(0.84, 0.895, 'Step τ vs Radius ρₐ', fontsize=12, fontweight='bold',
-             ha='center', color=PALETTE['dark'])
+             ha='center', color=PALETTE['dark_gray'])
 
     x = np.arange(steps)
 
@@ -373,7 +366,7 @@ def make_plot(
             ax.annotate(r'$1000\times$ spike', xy=(spike_at, 0.6),
                         xycoords=('data', 'axes fraction'),
                         xytext=(15, 5), textcoords='offset points',
-                        fontsize=9, color=PALETTE['dark'],
+                        fontsize=9, color=PALETTE['dark_gray'],
                         arrowprops=dict(arrowstyle='->', color=PALETTE['mid']))
         if i == 2:
             ax.set_xlabel('Step', fontsize=11)
@@ -391,7 +384,7 @@ def make_plot(
         ax.set_xlim(0, steps)
         ax.set_ylim(-0.05, 1.05)
         ax.set_yticks([0, 0.5, 1.0])
-        ax.set_yticklabels(['0%', '50%', '100%'])
+        format_percent_axis(ax, xmax=1.0)
         ax.yaxis.grid(True, alpha=0.3, color=PALETTE['light'])
         if i == 2:
             ax.set_xlabel('Step', fontsize=11)
@@ -440,6 +433,7 @@ def make_plot(
         else:
             ax.set_xticklabels([])
 
+    finish_figure(fig, rect=[0, 0, 1, 0.92])
     fig.savefig(out_pdf, bbox_inches='tight', dpi=300)
     fig.savefig(out_png, bbox_inches='tight', dpi=150)
     plt.close(fig)

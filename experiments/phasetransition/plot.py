@@ -4,43 +4,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from pathlib import Path
+import sys
 
-# === PALETTE (Economist) ===
-PALETTE = {
-    'red': '#E3120B',
-    'blue': '#006BA2',
-    'teal': '#00A5A5',
-    'gold': '#F4A100',
-    'purple': '#6F2DA8',
-    'green': '#00843D',
-    'dark_gray': '#3D3D3D',
-    'mid_gray': '#767676',
-    'light_gray': '#D0D0D0',
-}
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-# === STYLE SETUP ===
-plt.rcParams.update({
-    'font.family': 'sans-serif',
-    'font.sans-serif': ['Arial', 'Helvetica Neue', 'DejaVu Sans'],
-    'font.size': 15,
-    'axes.titlesize': 16,
-    'axes.titleweight': 'bold',
-    'axes.labelsize': 15,
-    'axes.spines.top': False,
-    'axes.spines.right': False,
-    'axes.edgecolor': PALETTE['dark_gray'],
-    'axes.linewidth': 0.8,
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
-    'xtick.color': PALETTE['dark_gray'],
-    'ytick.color': PALETTE['dark_gray'],
-    'grid.color': PALETTE['light_gray'],
-    'grid.linewidth': 0.5,
-    'figure.facecolor': 'white',
-    'axes.facecolor': 'white',
-    'legend.frameon': False,
-    'legend.fontsize': 11,
-})
+from ghosts.plotting import PALETTE, apply_plot_style, finish_figure
+apply_plot_style(font_size=15, title_size=16, label_size=15, tick_size=14, legend_size=11)
 
 # === LOAD DATA ===
 datapath = Path(__file__).resolve().parent / "results"
@@ -51,7 +23,7 @@ r_values = data['r_values']
 archs = [
     ('Linear', PALETTE['red'], 1.8),
     ('MLP', PALETTE['gold'], 1.5),
-    ('CNN', '#DC7633', 1.5),  # orange
+    ('CNN', PALETTE['teal'], 1.5),
     ('MLP+LayerNorm', PALETTE['blue'], 1.8),
     ('CNN+BatchNorm', PALETTE['green'], 1.8),
     ('TinyTransformer', PALETTE['purple'], 1.8),
@@ -115,7 +87,7 @@ ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=100, decimals=0))
 ax.yaxis.grid(True, linestyle='-', alpha=0.7)
 ax.xaxis.grid(False)
 
-fig.tight_layout(rect=[0, 0, 1, 0.94])
+finish_figure(fig, rect=[0, 0, 1, 0.94])
 
 # === SAVE ===
 outdir = Path(__file__).resolve().parent / "results"

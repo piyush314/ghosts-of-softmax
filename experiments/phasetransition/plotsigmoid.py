@@ -3,35 +3,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
+import sys
 
-# === PALETTE (Economist style) ===
-PALETTE = {
-    'blue': '#006BA2',
-    'red': '#E3120B',
-    'green': '#00843D',
-    'gold': '#D4A017',
-    'dark': '#3D3D3D',
-    'mid': '#767676',
-    'light': '#D0D0D0',
-}
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-plt.rcParams.update({
-    'font.family': 'sans-serif',
-    'font.sans-serif': ['Arial', 'Helvetica Neue', 'DejaVu Sans'],
-    'font.size': 12,
-    'axes.titlesize': 14,
-    'axes.titleweight': 'bold',
-    'axes.spines.top': False,
-    'axes.spines.right': False,
-    'axes.edgecolor': PALETTE['dark'],
-    'axes.linewidth': 0.8,
-    'axes.labelsize': 12,
-    'xtick.labelsize': 11,
-    'ytick.labelsize': 11,
-    'legend.fontsize': 11,
-    'figure.facecolor': 'white',
-    'axes.facecolor': 'white',
-})
+from ghosts.plotting import PALETTE, apply_plot_style, finish_figure
+
+apply_plot_style(font_size=12, title_size=14, label_size=12, tick_size=11, legend_size=11)
 
 # === DATA ===
 x = np.logspace(-2, 2, 500)
@@ -51,7 +32,7 @@ ax.plot(x, sigmoid, color=PALETTE['blue'], lw=2.5, zorder=3)
 ax.axvline(x_pi, color=PALETTE['red'], ls='--', lw=1.8, zorder=2, alpha=0.8)
 
 # Horizontal line showing p(π)
-ax.hlines(p_pi, x.min(), x_pi, color=PALETTE['mid'], ls=':', lw=1.2, zorder=1)
+ax.hlines(p_pi, x.min(), x_pi, color=PALETTE['mid_gray'], ls=':', lw=1.2, zorder=1)
 
 # Mark the point
 ax.scatter([x_pi], [p_pi], color=PALETTE['red'], s=60, zorder=4, edgecolor='white', linewidth=1.5)
@@ -62,9 +43,9 @@ ax.annotate(
     xy=(x_pi, p_pi),
     xytext=(x_pi * 2.5, p_pi - 0.12),
     fontsize=13,
-    color=PALETTE['dark'],
+    color=PALETTE['dark_gray'],
     ha='left',
-    arrowprops=dict(arrowstyle='->', color=PALETTE['mid'], lw=1.2),
+    arrowprops=dict(arrowstyle='->', color=PALETTE['mid_gray'], lw=1.2),
 )
 
 # Shaded regions
@@ -85,7 +66,7 @@ ax.set_xlim(x.min(), x.max())
 ax.set_ylim(0.48, 1.02)
 
 # Grid
-ax.yaxis.grid(True, alpha=0.4, color=PALETTE['light'])
+ax.yaxis.grid(True, alpha=0.4, color=PALETTE['light_gray'])
 ax.set_axisbelow(True)
 
 # Title and subtitle
@@ -93,9 +74,9 @@ fig.suptitle(r'Complex Singularity at $i\pi$ Bounds Taylor Series to $|x| < \pi$
              fontsize=13, fontweight='bold', x=0.02, ha='left')
 ax.set_title('At x = π, prediction already 96% confident',
              loc='left', pad=4, fontsize=11, fontweight='normal',
-             color=PALETTE['mid'])
+             color=PALETTE['mid_gray'])
 
-plt.tight_layout()
+finish_figure(fig, rect=[0, 0, 1, 0.93])
 
 # === SAVE ===
 outdir = Path(__file__).resolve().parent / "results"

@@ -26,6 +26,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import matplotlib.ticker as ticker
 import numpy as np
 import torch
 import torch.nn as nn
@@ -44,17 +45,8 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
+from ghosts.plotting import PALETTE, apply_plot_style, finish_figure, format_percent_axis
 from ghosts.reporting import repo_relpath, scalar_stats, write_summary
-
-PALETTE = {
-    'red': '#E3120B',
-    'gold': '#F4A100',
-    'blue': '#1E5AA8',
-    'teal': '#0097A7',
-    'dark': '#3D3D3D',
-    'mid': '#767676',
-    'light': '#D0D0D0',
-}
 
 
 def load_digits() -> Tuple[np.ndarray, np.ndarray]:
@@ -335,13 +327,7 @@ def run_experiment(archs: List[str], seeds: List[int], steps: int, base_lr: floa
 def make_plot(data: Dict, archs: List[str], steps: int, spike_at: int,
               out_png: Path, out_pdf: Path, spike_mul: float = 10.0) -> None:
     """Plot median+IQR for loss and accuracy per architecture."""
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Helvetica Neue', 'DejaVu Sans'],
-        'font.size': 11,
-        'axes.spines.top': False,
-        'axes.spines.right': False,
-    })
+    apply_plot_style(font_size=11, title_size=13, label_size=11, tick_size=10)
 
     def stats(arrs):
         arr = np.array(arrs)
@@ -353,8 +339,21 @@ def make_plot(data: Dict, archs: List[str], steps: int, spike_at: int,
                            hspace=0.12, wspace=0.30)
     fig.subplots_adjust(top=0.88, bottom=0.08, left=0.11, right=0.96)
 
-    fig.suptitle(f'Architecture Comparison: {int(spike_mul)}x LR Spike (Multi-seed)',
-                 fontsize=13, fontweight='bold', y=0.97)
+    spike_str = f"{int(spike_mul)}x"
+    fig.suptitle(
+        f"{spike_str} learning-rate spikes erase standard training, while the rho controller limits damage",
+        fontsize=13,
+        fontweight="bold",
+        y=0.97,
+    )
+    fig.text(
+        0.11,
+        0.935,
+        "Median and IQR across seeds for loss and test accuracy after the same optimizer shock.",
+        fontsize=10,
+        color=PALETTE["mid_gray"],
+        ha="left",
+    )
 
     # Legend
     fig.text(0.18, 0.92, '- Plain', fontsize=10, color=PALETTE['red'],
@@ -366,9 +365,9 @@ def make_plot(data: Dict, archs: List[str], steps: int, spike_at: int,
 
     # Column titles
     fig.text(0.33, 0.885, 'Training Loss', fontsize=11, fontweight='bold',
-             ha='center', color=PALETTE['dark'])
+             ha='center', color=PALETTE['dark_gray'])
     fig.text(0.74, 0.885, 'Test Accuracy', fontsize=11, fontweight='bold',
-             ha='center', color=PALETTE['dark'])
+             ha='center', color=PALETTE['dark_gray'])
 
     MESSAGES = {
         "Transformer": "Attention amplifies spike",
@@ -426,7 +425,7 @@ def make_plot(data: Dict, archs: List[str], steps: int, spike_at: int,
             ax.annotate(f'{int(spike_mul)}x spike', xy=(spike_at, 0.6),
                         xycoords=('data', 'axes fraction'),
                         xytext=(15, 5), textcoords='offset points',
-                        fontsize=9, color=PALETTE['dark'],
+                        fontsize=9, color=PALETTE['dark_gray'],
                         arrowprops=dict(arrowstyle='->', color=PALETTE['mid']))
         if i == len(archs) - 1:
             ax.set_xlabel('Step', fontsize=11)
@@ -453,7 +452,7 @@ def make_plot(data: Dict, archs: List[str], steps: int, spike_at: int,
         ax.set_xlim(0, steps)
         ax.set_ylim(-0.05, 1.05)
         ax.set_yticks([0, 0.5, 1.0])
-        ax.set_yticklabels(['0%', '50%', '100%'])
+        format_percent_axis(ax, xmax=1.0)
         ax.yaxis.grid(True, alpha=0.3, color=PALETTE['light'])
 
         if i == len(archs) - 1:
@@ -461,6 +460,7 @@ def make_plot(data: Dict, archs: List[str], steps: int, spike_at: int,
         else:
             ax.set_xticklabels([])
 
+    finish_figure(fig, rect=[0, 0, 1, 0.92])
     fig.savefig(out_pdf, bbox_inches='tight', dpi=300)
     fig.savefig(out_png, bbox_inches='tight', dpi=150)
     plt.close(fig)

@@ -24,6 +24,7 @@ os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib-exp28")
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 import torch
 import torch.nn as nn
@@ -40,22 +41,20 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
+from ghosts.plotting import (
+    PALETTE,
+    add_end_labels,
+    add_subtitle,
+    apply_plot_style,
+    finish_figure,
+    format_percent_axis,
+)
 from ghosts.reporting import repo_relpath, scalar_stats, write_summary
 
 DATA_DIR = Path(__file__).resolve().parent / "cache"
 PLOT_DIR = Path(__file__).resolve().parent / "results"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
-
-PALETTE = {
-    'red': '#E3120B',
-    'blue': '#1565C0',
-    'green': '#2E7D32',
-    'orange': '#F4A100',
-    'purple': '#7B1FA2',
-    'dark': '#3D3D3D',
-}
-
 
 def build_cifar_resnet18(num_classes: int = 10) -> nn.Module:
     """ResNet-18 adapted for CIFAR-10 (3x3 stem, no maxpool)."""
@@ -360,25 +359,40 @@ def make_plot(data: Dict, out_png: Path, out_pdf: Path) -> None:
     rs = np.array([l['r'] for l in logs])
     rho_as = np.array([l['rho_a'] for l in logs])
 
+    apply_plot_style(font_size=10, title_size=13, label_size=10, tick_size=9)
+    lr_str = f"{lr:g}"
     fig, axes = plt.subplots(2, 2, figsize=(12, 8))
-    fig.suptitle(f'ResNet-18 CIFAR-10: Natural Instability Detection (LR={lr})',
-                 fontsize=13, fontweight='bold')
+    fig.suptitle(
+        f"With LR={lr_str}, the instability signal rises before the loss spike arrives",
+        fontsize=13,
+        fontweight='bold',
+    )
+    fig.text(
+        0.08,
+        0.94,
+        "Single-run view of loss, normalized step size, analytic radius, and their relationship over time.",
+        fontsize=10,
+        color=PALETTE["mid_gray"],
+        ha="left",
+    )
 
     # Panel 0: Loss over time
     ax = axes[0, 0]
     ax.semilogy(steps, losses, color=PALETTE['red'], lw=1.5)
     ax.set_xlabel('Step')
     ax.set_ylabel('Training Loss')
-    ax.set_title('Loss', fontweight='bold')
+    ax.set_title('Loss rises as training approaches the unstable regime', loc='left', fontweight='bold')
+    add_subtitle(ax, "Training loss on a log scale.", fontsize=9)
     ax.grid(True, alpha=0.3)
 
     # Panel 1: r = tau/rho_a over time
     ax = axes[0, 1]
     ax.semilogy(steps, rs, color=PALETTE['blue'], lw=1.5)
-    ax.axhline(1.0, color=PALETTE['dark'], ls='--', lw=1, alpha=0.7)
+    ax.axhline(1.0, color=PALETTE['dark_gray'], ls='--', lw=1, alpha=0.7)
     ax.set_xlabel('Step')
     ax.set_ylabel(r'$r = \tau / \rho_a$')
-    ax.set_title('Ratio r (r=1 is stability boundary)', fontweight='bold')
+    ax.set_title('The normalized step approaches the stability boundary', loc='left', fontweight='bold')
+    add_subtitle(ax, "The critical line is r = 1.", fontsize=9)
     ax.grid(True, alpha=0.3)
 
     # Panel 2: rho_a over time
@@ -386,23 +400,31 @@ def make_plot(data: Dict, out_png: Path, out_pdf: Path) -> None:
     ax.semilogy(steps, rho_as, color=PALETTE['green'], lw=1.5)
     ax.set_xlabel('Step')
     ax.set_ylabel(r'$\rho_a$')
-    ax.set_title('Analytic Radius', fontweight='bold')
+    ax.set_title('The analytic radius shrinks as the model becomes fragile', loc='left', fontweight='bold')
+    add_subtitle(ax, "Smaller rho_a means less headroom for the same optimizer step.", fontsize=9)
     ax.grid(True, alpha=0.3)
 
     # Panel 3: Loss vs r (scatter)
     ax = axes[1, 1]
-    # Color by step (early=blue, late=red)
-    colors = plt.cm.coolwarm(np.linspace(0, 1, len(steps)))
-    ax.scatter(rs, losses, c=colors, s=10, alpha=0.6)
-    ax.axvline(1.0, color=PALETTE['dark'], ls='--', lw=1, alpha=0.7)
+    thirds = np.array_split(np.arange(len(steps)), 3)
+    scatter_specs = [
+        (thirds[0], PALETTE["blue"], "early"),
+        (thirds[1], PALETTE["gold"], "middle"),
+        (thirds[2], PALETTE["red"], "late"),
+    ]
+    for idx, color, label in scatter_specs:
+        ax.scatter(rs[idx], losses[idx], color=color, s=12, alpha=0.55, label=label)
+    ax.axvline(1.0, color=PALETTE['dark_gray'], ls='--', lw=1, alpha=0.7)
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_xlabel(r'$r = \tau / \rho_a$')
     ax.set_ylabel('Training Loss')
-    ax.set_title('Loss vs r (colored by time)', fontweight='bold')
+    ax.set_title('Late training points crowd near the instability boundary', loc='left', fontweight='bold')
+    add_subtitle(ax, "Color indicates when the point occurred during training.", fontsize=9)
     ax.grid(True, alpha=0.3)
+    ax.legend(loc="lower right", fontsize=8, frameon=False)
 
-    plt.tight_layout()
+    finish_figure(fig, rect=[0, 0, 1, 0.92])
     fig.savefig(out_pdf, bbox_inches='tight', dpi=300)
     fig.savefig(out_png, bbox_inches='tight', dpi=150)
     plt.close(fig)
@@ -412,57 +434,92 @@ def make_comparison_plot(all_data: Dict, out_png: Path, out_pdf: Path) -> None:
     """Plot comparison across LRs."""
     lrs = sorted(all_data.keys())
 
+    apply_plot_style(font_size=10, title_size=12, label_size=10, tick_size=9)
     fig, axes = plt.subplots(2, 2, figsize=(12, 8))
-    fig.suptitle('ResNet-18 CIFAR-10: Instability Detection Across LRs',
-                 fontsize=13, fontweight='bold')
+    fig.suptitle(
+        "Larger learning rates move ResNet-18 closer to the instability boundary",
+        fontsize=13,
+        fontweight='bold',
+    )
+    fig.text(
+        0.08,
+        0.94,
+        "Comparison across fixed learning rates. Right-side labels replace legends so the trajectories remain readable.",
+        fontsize=10,
+        color=PALETTE["mid_gray"],
+        ha="left",
+    )
 
-    colors = [PALETTE['blue'], PALETTE['green'], PALETTE['orange'], PALETTE['red']]
+    colors = [PALETTE['blue'], PALETTE['green'], PALETTE['gold'], PALETTE['red']]
 
     # Panel 0: Loss curves
     ax = axes[0, 0]
+    loss_specs = []
     for i, lr in enumerate(lrs):
         logs = all_data[lr]['step_logs']
         steps = [l['step'] for l in logs]
         losses = [l['loss'] for l in logs]
-        ax.semilogy(steps, losses, color=colors[i % len(colors)], lw=1.5,
-                    label=f'LR={lr}', alpha=0.8)
+        ax.semilogy(steps, losses, color=colors[i % len(colors)], lw=1.5, alpha=0.8)
+        loss_specs.append((losses[-1], f"LR={lr:g}", colors[i % len(colors)], None))
     ax.set_xlabel('Step')
     ax.set_ylabel('Training Loss')
-    ax.set_title('Loss', fontweight='bold')
-    ax.legend(fontsize=9)
+    ax.set_title('Higher learning rates produce earlier loss blow-up', loc='left', fontweight='bold')
+    add_subtitle(ax, "Each line is a separate fixed-LR training run.", fontsize=9)
     ax.grid(True, alpha=0.3)
+    add_end_labels(
+        ax,
+        steps,
+        loss_specs,
+        fontsize=8,
+    )
 
     # Panel 1: r curves
     ax = axes[0, 1]
+    r_specs = []
     for i, lr in enumerate(lrs):
         logs = all_data[lr]['step_logs']
         steps = [l['step'] for l in logs]
         rs = [l['r'] for l in logs]
-        ax.semilogy(steps, rs, color=colors[i % len(colors)], lw=1.5,
-                    label=f'LR={lr}', alpha=0.8)
-    ax.axhline(1.0, color=PALETTE['dark'], ls='--', lw=1.5)
+        ax.semilogy(steps, rs, color=colors[i % len(colors)], lw=1.5, alpha=0.8)
+        r_specs.append((rs[-1], f"LR={lr:g}", colors[i % len(colors)], None))
+    ax.axhline(1.0, color=PALETTE['dark_gray'], ls='--', lw=1.5)
     ax.set_xlabel('Step')
     ax.set_ylabel(r'$r = \tau / \rho_a$')
-    ax.set_title('Ratio r (r=1 boundary)', fontweight='bold')
-    ax.legend(fontsize=9)
+    ax.set_title('The normalized step is the leading instability signal', loc='left', fontweight='bold')
+    add_subtitle(ax, "Curves above r = 1 have already outrun the local analytic radius.", fontsize=9)
     ax.grid(True, alpha=0.3)
+    add_end_labels(
+        ax,
+        steps,
+        r_specs,
+        fontsize=8,
+    )
 
     # Panel 2: Test accuracy
     ax = axes[1, 0]
+    acc_specs = []
     for i, lr in enumerate(lrs):
         epoch_logs = all_data[lr]['epoch_logs']
         epochs = [l['epoch'] for l in epoch_logs]
         accs = [l['test_acc'] for l in epoch_logs]
-        ax.plot(epochs, accs, color=colors[i % len(colors)], lw=2,
-                label=f'LR={lr}', marker='o', markersize=4)
+        ax.plot(epochs, accs, color=colors[i % len(colors)], lw=2, marker='o', markersize=4)
+        acc_specs.append((accs[-1], f"LR={lr:g}", colors[i % len(colors)], None))
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Test Accuracy')
-    ax.set_title('Test Accuracy', fontweight='bold')
-    ax.legend(fontsize=9)
+    ax.set_title('Accuracy falls first for the most aggressive learning rates', loc='left', fontweight='bold')
+    add_subtitle(ax, "Evaluation is shown per epoch on the same test split.", fontsize=9)
+    format_percent_axis(ax, xmax=1.0)
     ax.grid(True, alpha=0.3)
+    add_end_labels(
+        ax,
+        epochs,
+        acc_specs,
+        fontsize=8,
+    )
 
     # Panel 3: Max r per epoch
     ax = axes[1, 1]
+    max_r_specs = []
     for i, lr in enumerate(lrs):
         logs = all_data[lr]['step_logs']
         # Group by epoch
@@ -474,16 +531,22 @@ def make_comparison_plot(all_data: Dict, out_png: Path, out_pdf: Path) -> None:
             epochs_r[e].append(l['r'])
         epochs = sorted(epochs_r.keys())
         max_rs = [max(epochs_r[e]) for e in epochs]
-        ax.semilogy(epochs, max_rs, color=colors[i % len(colors)], lw=2,
-                    label=f'LR={lr}', marker='o', markersize=4)
-    ax.axhline(1.0, color=PALETTE['dark'], ls='--', lw=1.5)
+        ax.semilogy(epochs, max_rs, color=colors[i % len(colors)], lw=2, marker='o', markersize=4)
+        max_r_specs.append((max_rs[-1], f"LR={lr:g}", colors[i % len(colors)], None))
+    ax.axhline(1.0, color=PALETTE['dark_gray'], ls='--', lw=1.5)
     ax.set_xlabel('Epoch')
     ax.set_ylabel(r'Max $r$ per epoch')
-    ax.set_title('Max r per Epoch', fontweight='bold')
-    ax.legend(fontsize=9)
+    ax.set_title('The per-epoch maximum r separates safe and unsafe runs', loc='left', fontweight='bold')
+    add_subtitle(ax, "Values above 1 indicate at least one unsafe step during that epoch.", fontsize=9)
     ax.grid(True, alpha=0.3)
+    add_end_labels(
+        ax,
+        epochs,
+        max_r_specs,
+        fontsize=8,
+    )
 
-    plt.tight_layout()
+    finish_figure(fig, rect=[0, 0, 1, 0.92])
     fig.savefig(out_pdf, bbox_inches='tight', dpi=300)
     fig.savefig(out_png, bbox_inches='tight', dpi=150)
     plt.close(fig)
@@ -529,11 +592,25 @@ def make_multiseed_plot(all_data: Dict, out_png: Path, out_pdf: Path,
     lrs = sorted(all_data.keys())
     seeds = sorted(all_data[lrs[0]].keys())
 
-    fig, axes = plt.subplots(1, 3, figsize=(16, 4.5))
+    apply_plot_style(font_size=10, title_size=12, label_size=10, tick_size=9)
+    fig, axes = plt.subplots(1, 3, figsize=(16, 4.8))
+    fig.suptitle(
+        "Across seeds, radius-controlled runs keep ResNet-18 in the stable regime",
+        fontsize=13,
+        fontweight="bold",
+    )
+    fig.text(
+        0.08,
+        0.92,
+        "Median and IQR for standard fixed learning rates and several rho-controller targets.",
+        fontsize=10,
+        color=PALETTE["mid_gray"],
+        ha="left",
+    )
 
     colors = [PALETTE['blue'], PALETTE['green'],
-              PALETTE['orange'], PALETTE['red']]
-    ctrl_color = '#7B1FA2'
+              PALETTE['gold'], PALETTE['red']]
+    ctrl_color = PALETTE['purple']
     ctrl_styles = [
         (0.5, ctrl_color, 'D', r'$\rho_a$-ctrl $r{=}0.5$'),
         (1.0, ctrl_color, 's', r'$\rho_a$-ctrl $r{=}1$'),
@@ -575,11 +652,14 @@ def make_multiseed_plot(all_data: Dict, out_png: Path, out_pdf: Path,
 
     # Panel 0: Test loss
     ax = axes[0]
+    loss_label_specs = []
     for i, lr in enumerate(lrs):
         loss_all = [[l['test_loss'] for l in all_data[lr][s]['epoch_logs']]
                     for s in seeds]
         plotband(ax, list(range(len(loss_all[0]))), loss_all,
                  colors[i], f'LR={lr}', log=True)
+        med, _, _ = stats(loss_all)
+        loss_label_specs.append((max(med[-1], 1e-4), f'LR={lr:g}', colors[i], None))
     if rho_variants:
         for tr, col, mk, lab in ctrl_styles:
             if tr not in rho_variants:
@@ -591,19 +671,25 @@ def make_multiseed_plot(all_data: Dict, out_png: Path, out_pdf: Path,
             plotband(ax, list(range(len(vals[0]))), vals,
                      col, lab, log=True, marker=mk, ms=6,
                      mfc='white', mec=col, mew=1.5)
+            med, _, _ = stats(vals)
+            loss_label_specs.append((max(med[-1], 1e-4), lab, col, "bold" if tr == 1.0 else None))
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Test Loss')
-    ax.set_title('Test Loss', fontweight='bold')
-    ax.legend(fontsize=7)
+    ax.set_title('Radius-controlled runs avoid the worst loss blow-up', loc='left', fontweight='bold')
+    add_subtitle(ax, "Median loss across seeds on a log scale.", fontsize=9)
     ax.grid(True, alpha=0.3)
+    add_end_labels(ax, list(range(len(loss_all[0]))), loss_label_specs, fontsize=7)
 
     # Panel 1: Test accuracy
     ax = axes[1]
+    acc_label_specs = []
     for i, lr in enumerate(lrs):
         accs = [[l['test_acc'] for l in all_data[lr][s]['epoch_logs']]
                 for s in seeds]
         plotband(ax, list(range(len(accs[0]))), accs,
                  colors[i], f'LR={lr}')
+        med, _, _ = stats(accs)
+        acc_label_specs.append((med[-1], f'LR={lr:g}', colors[i], None))
     if rho_variants:
         for tr, col, mk, lab in ctrl_styles:
             if tr not in rho_variants:
@@ -615,14 +701,19 @@ def make_multiseed_plot(all_data: Dict, out_png: Path, out_pdf: Path,
             plotband(ax, list(range(len(vals[0]))), vals,
                      col, lab, marker=mk, ms=6,
                      mfc='white', mec=col, mew=1.5)
+            med, _, _ = stats(vals)
+            acc_label_specs.append((med[-1], lab, col, "bold" if tr == 1.0 else None))
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Test Accuracy')
-    ax.set_title('Test Accuracy', fontweight='bold')
-    ax.legend(fontsize=7)
+    ax.set_title('The best rho targets preserve more accuracy', loc='left', fontweight='bold')
+    add_subtitle(ax, "Accuracy is shown as a proportion on the held-out set.", fontsize=9)
+    format_percent_axis(ax, xmax=1.0)
     ax.grid(True, alpha=0.3)
+    add_end_labels(ax, list(range(len(accs[0]))), acc_label_specs, fontsize=7)
 
     # Panel 2: Max r per epoch
     ax = axes[2]
+    r_label_specs = []
     for i, lr in enumerate(lrs):
         mr_all = []
         for s in seeds:
@@ -630,6 +721,8 @@ def make_multiseed_plot(all_data: Dict, out_png: Path, out_pdf: Path,
             mr_all.append(mrs)
         plotband(ax, ep_list, mr_all, colors[i],
                  f'LR={lr}', log=True)
+        med, _, _ = stats(mr_all)
+        r_label_specs.append((max(med[-1], 1e-4), f'LR={lr:g}', colors[i], None))
     if rho_variants:
         for tr, col, mk, lab in ctrl_styles:
             if tr not in rho_variants:
@@ -643,14 +736,17 @@ def make_multiseed_plot(all_data: Dict, out_png: Path, out_pdf: Path,
             plotband(ax, ep_list, mr_all, col, lab,
                      log=True, marker=mk, ms=6,
                      mfc='white', mec=col, mew=1.5)
-    ax.axhline(1.0, color=PALETTE['dark'], ls='--', lw=1.5)
+            med, _, _ = stats(mr_all)
+            r_label_specs.append((max(med[-1], 1e-4), lab, col, "bold" if tr == 1.0 else None))
+    ax.axhline(1.0, color=PALETTE['dark_gray'], ls='--', lw=1.5)
     ax.set_xlabel('Epoch')
     ax.set_ylabel(r'Max $r$ per epoch')
-    ax.set_title('Max r per Epoch (r=1 boundary)', fontweight='bold')
-    ax.legend(fontsize=7)
+    ax.set_title('Well-tuned rho targets hold the step close to the boundary', loc='left', fontweight='bold')
+    add_subtitle(ax, "The dashed line marks the r = 1 stability threshold.", fontsize=9)
     ax.grid(True, alpha=0.3)
+    add_end_labels(ax, ep_list, r_label_specs, fontsize=7)
 
-    plt.tight_layout()
+    finish_figure(fig, rect=[0, 0, 1, 0.90])
     fig.savefig(out_pdf, bbox_inches='tight', dpi=300)
     fig.savefig(out_png, bbox_inches='tight', dpi=150)
     plt.close(fig)

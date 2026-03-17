@@ -4,35 +4,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from pathlib import Path
+import sys
 
-# === PALETTE (Economist) ===
-PALETTE = {
-    'red': '#E3120B',
-    'blue': '#006BA2',
-    'teal': '#00A5A5',
-    'gold': '#F4A100',
-    'purple': '#6F2DA8',
-    'green': '#00843D',
-    'dark_gray': '#3D3D3D',
-    'mid_gray': '#767676',
-    'light_gray': '#D0D0D0',
-}
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-plt.rcParams.update({
-    'font.family': 'sans-serif',
-    'font.sans-serif': ['Arial', 'Helvetica Neue', 'DejaVu Sans'],
-    'font.size': 10,
-    'axes.titlesize': 11,
-    'axes.titleweight': 'bold',
-    'axes.spines.top': False,
-    'axes.spines.right': False,
-    'axes.edgecolor': PALETTE['dark_gray'],
-    'axes.linewidth': 0.8,
-    'grid.color': PALETTE['light_gray'],
-    'grid.linewidth': 0.5,
-    'figure.facecolor': 'white',
-    'axes.facecolor': 'white',
-})
+from ghosts.plotting import PALETTE, add_end_labels, apply_plot_style, finish_figure
+apply_plot_style(font_size=10, title_size=11, label_size=10, tick_size=9)
 
 # === LOAD DATA ===
 datapath = Path(__file__).resolve().parent / "results"
@@ -44,7 +24,7 @@ r_values = data['r_values']
 archs = [
     ('Linear', PALETTE['red'], 2.0),      # protagonist - transitions at r=1
     ('MLP', PALETTE['gold'], 1.5),
-    ('CNN', '#DC7633', 1.5),
+    ('CNN', PALETTE['teal'], 1.5),
     ('MLP+LayerNorm', PALETTE['blue'], 1.5),
     ('CNN+BatchNorm', PALETTE['green'], 1.5),
     ('TinyTransformer', PALETTE['purple'], 1.5),
@@ -104,13 +84,17 @@ for arch, color, lw in archs:
 plt.subplots_adjust(right=0.85, wspace=0.25)
 
 # Legend for panel A only
-ax1.legend(loc='lower left', fontsize=7, ncol=2, framealpha=0.9)
+acc_label_specs = []
+for arch, color, lw in archs:
+    acc = data[f'{arch}_acc'] * 100
+    acc_label_specs.append((acc[-1], arch.replace('+LayerNorm', '+LN').replace('+BatchNorm', '+BN'), color, 'bold' if lw > 1.6 else None))
+add_end_labels(ax1, r_values, acc_label_specs, fontsize=7)
 
 # Suptitle
 fig.suptitle(r"Phase Transition via JVP-Based $\rho_a$: Linear Model at $r = 1$",
              fontsize=12, fontweight='bold', y=0.98)
 
-plt.tight_layout(rect=[0, 0, 1, 0.93])
+finish_figure(fig, rect=[0, 0, 1, 0.93])
 
 # === SAVE ===
 outdir = Path(__file__).resolve().parent / "results"

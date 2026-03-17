@@ -3,31 +3,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
+import sys
 
-# === PALETTE (Economist style) ===
-PALETTE = {
-    'red': '#E3120B',
-    'blue': '#006BA2',
-    'green': '#00843D',
-    'dark': '#3D3D3D',
-    'mid': '#767676',
-    'light': '#D0D0D0',
-    'gold': '#C4A000',
-}
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-plt.rcParams.update({
-    'font.family': 'sans-serif',
-    'font.sans-serif': ['Arial', 'Helvetica Neue', 'DejaVu Sans'],
-    'font.size': 9,
-    'axes.titlesize': 10,
-    'axes.titleweight': 'bold',
-    'axes.spines.top': False,
-    'axes.spines.right': False,
-    'axes.edgecolor': PALETTE['dark'],
-    'axes.linewidth': 0.8,
-    'figure.facecolor': 'white',
-    'axes.facecolor': 'white',
-})
+from ghosts.plotting import PALETTE, apply_plot_style, finish_figure
+apply_plot_style(font_size=9, title_size=10, label_size=9, tick_size=8)
 
 # === LOAD DATA ===
 datapath = Path(__file__).resolve().parent / "results"
@@ -159,7 +143,7 @@ for col, (stage, colTitle) in enumerate(zip(stages, colTitles)):
 fig.suptitle('Transition near r=1 validates the analyticity radius as stability boundary',
              fontsize=11, fontweight='bold', x=0.5, y=0.98, ha='center')
 
-plt.tight_layout(rect=[0, 0.02, 1, 0.96])
+finish_figure(fig, rect=[0, 0.02, 1, 0.96])
 
 # === SAVE ===
 outdir = Path(__file__).resolve().parent / "results"

@@ -48,17 +48,15 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
+from ghosts.plotting import (
+    PALETTE,
+    add_end_labels,
+    add_subtitle,
+    apply_plot_style,
+    finish_figure,
+    format_percent_axis,
+)
 from ghosts.reporting import repo_relpath, scalar_stats, write_summary
-
-PALETTE = {
-    'blue': '#1565C0',
-    'orange': '#D84315',
-    'green': '#2E7D32',
-    'purple': '#7B1FA2',
-    'dark': '#3D3D3D',
-    'mid': '#767676',
-    'light': '#D0D0D0',
-}
 
 
 def load_digits() -> Tuple[np.ndarray, np.ndarray]:
@@ -307,18 +305,12 @@ def run_experiment(seeds: List[int], modes: List[str], steps: int, lr_base: floa
 
 def make_plot(data: Dict, modes: List[str], eval_every: int, out_png: Path,
               out_pdf: Path) -> None:
-    plt.rcParams.update({
-        'font.family': 'sans-serif',
-        'font.sans-serif': ['Arial', 'Helvetica Neue', 'DejaVu Sans'],
-        'font.size': 11,
-        'axes.spines.top': False,
-        'axes.spines.right': False,
-    })
+    apply_plot_style(font_size=11, title_size=13, label_size=11, tick_size=10)
 
     colors = {
         'all-radii': PALETTE['blue'],
-        'attn-out': PALETTE['mid'],
-        'output-only': PALETTE['orange'],
+        'attn-out': PALETTE['mid_gray'],
+        'output-only': PALETTE['gold'],
         'fixed-1x': PALETTE['green'],
         'fixed-16x': PALETTE['purple'],
     }
@@ -330,8 +322,19 @@ def make_plot(data: Dict, modes: List[str], eval_every: int, out_png: Path,
 
     fig, axes = plt.subplots(1, 3, figsize=(12, 3.5))
     fig.subplots_adjust(top=0.85, wspace=0.35)
-    fig.suptitle("Tiny Transformer on Digits: Adaptive vs Fixed LR (Multi-seed)",
-                 fontsize=13, fontweight='bold')
+    fig.suptitle(
+        "Adaptive radius control outlasts fixed learning rates in the tiny-transformer bottleneck study",
+        fontsize=13,
+        fontweight='bold',
+    )
+    fig.text(
+        0.08,
+        0.90,
+        "Median and IQR across seeds for training loss, test accuracy, and effective learning rate.",
+        fontsize=10,
+        color=PALETTE["mid_gray"],
+        ha="left",
+    )
 
     seeds = list(data[modes[0]].keys())
     n_points = len(data[modes[0]][seeds[0]]["loss"])
@@ -339,51 +342,63 @@ def make_plot(data: Dict, modes: List[str], eval_every: int, out_png: Path,
 
     # Panel 0: Loss
     ax = axes[0]
+    loss_labels = []
     for mode in modes:
-        color = colors.get(mode, '#333')
+        color = colors.get(mode, PALETTE['mid_gray'])
         losses = [data[mode][s]["loss"] for s in seeds]
         med, q25, q75 = stats(losses)
         ax.fill_between(x, np.maximum(q25, 1e-6), np.maximum(q75, 1e-6),
                         alpha=0.15, color=color)
-        ax.semilogy(x, np.maximum(med, 1e-6), color=color, lw=2, label=mode)
+        loss_curve = np.maximum(med, 1e-6)
+        ax.semilogy(x, loss_curve, color=color, lw=2)
+        loss_labels.append((loss_curve[-1], mode, color, "bold" if mode == "all-radii" else None))
     ax.set_xlabel("Step")
     ax.set_ylabel("Training Loss")
-    ax.set_title("Loss", fontweight='bold')
+    ax.set_title("Adaptive control keeps the loss lower after the bottleneck forms", loc="left", fontweight='bold')
+    add_subtitle(ax, "The all-radii controller remains the most stable once training becomes sensitive.", fontsize=9)
     ax.grid(True, alpha=0.3, which='both')
-    ax.legend(fontsize=9)
+    add_end_labels(ax, x, loss_labels, fontsize=8)
 
     # Panel 1: Test Accuracy
     ax = axes[1]
+    acc_labels = []
     for mode in modes:
-        color = colors.get(mode, '#333')
+        color = colors.get(mode, PALETTE['mid_gray'])
         accs = [data[mode][s]["acc"] for s in seeds]
         med, q25, q75 = stats(accs)
         ax.fill_between(x, q25, q75, alpha=0.15, color=color)
-        ax.plot(x, med, color=color, lw=2, label=mode)
+        ax.plot(x, med, color=color, lw=2)
+        acc_labels.append((med[-1], mode, color, "bold" if mode == "all-radii" else None))
     ax.set_xlabel("Step")
     ax.set_ylabel("Test Accuracy")
-    ax.set_title("Accuracy", fontweight='bold')
+    ax.set_title("The adaptive controller retains more accuracy", loc="left", fontweight='bold')
+    add_subtitle(ax, "Fixed-rate baselines lose accuracy sooner even when their early trajectories look similar.", fontsize=9)
     ax.set_ylim(-0.05, 1.05)
     ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0])
-    ax.set_yticklabels(['0%', '25%', '50%', '75%', '100%'])
+    format_percent_axis(ax, xmax=1.0)
     ax.grid(True, alpha=0.3)
-    ax.legend(fontsize=9)
+    add_end_labels(ax, x, acc_labels, fontsize=8)
 
     # Panel 2: Effective LR
     ax = axes[2]
+    lr_labels = []
     for mode in modes:
-        color = colors.get(mode, '#333')
+        color = colors.get(mode, PALETTE['mid_gray'])
         lrs = [data[mode][s]["lr_eff"] for s in seeds]
         med, q25, q75 = stats(lrs)
         ax.fill_between(x, np.maximum(q25, 1e-12), np.maximum(q75, 1e-12),
                         alpha=0.15, color=color)
-        ax.semilogy(x, np.maximum(med, 1e-12), color=color, lw=2, label=mode)
+        lr_curve = np.maximum(med, 1e-12)
+        ax.semilogy(x, lr_curve, color=color, lw=2)
+        lr_labels.append((lr_curve[-1], mode, color, "bold" if mode == "all-radii" else None))
     ax.set_xlabel("Step")
     ax.set_ylabel("Effective LR")
-    ax.set_title("Effective Learning Rate", fontweight='bold')
+    ax.set_title("Adaptive control throttles the step when fragility grows", loc="left", fontweight='bold')
+    add_subtitle(ax, "Effective learning rate falls when the local radius tightens.", fontsize=9)
     ax.grid(True, alpha=0.3, which='both')
-    ax.legend(fontsize=9)
+    add_end_labels(ax, x, lr_labels, fontsize=8)
 
+    finish_figure(fig, rect=[0, 0, 1, 0.90])
     fig.savefig(out_pdf, bbox_inches='tight', dpi=300)
     fig.savefig(out_png, bbox_inches='tight', dpi=150)
     plt.close(fig)
