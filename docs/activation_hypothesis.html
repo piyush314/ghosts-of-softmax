@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activation Design from the Convergence-Radius Lens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FAFAF7; --bg2: #F2F1EC; --bg3: #E8E7E2;
+  --fg: #1A1A1A; --fg2: #4A4A45; --fg3: #8A8A82;
+  --accent: #534AB7; --accent2: #7B73D6;
+  --safe: #2D7A3A; --danger: #B83230; --blue: #1A65A5; --amber: #C06A00;
+  --teal: #0E7A5F; --coral: #C04D28; --pink: #B03D65;
+  --border: rgba(0,0,0,0.09); --border2: rgba(0,0,0,0.04);
+  --radius: 10px; --radius-lg: 14px;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131312; --bg2: #1C1C1A; --bg3: #252523;
+    --fg: #E5E3DC; --fg2: #A5A39B; --fg3: #6B6A64;
+    --accent: #9B93E8; --accent2: #7B73D6;
+    --safe: #5CB86A; --danger: #E85450; --blue: #5EAEF0; --amber: #F0A840;
+    --teal: #40C8A0; --coral: #E8825A; --pink: #E06090;
+    --border: rgba(255,255,255,0.09); --border2: rgba(255,255,255,0.04);
+  }
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:17px;scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--fg);line-height:1.72;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 1.5rem}
+
+/* ── Hero ── */
+header{padding:4.5rem 0 2.5rem;border-bottom:1px solid var(--border)}
+header h1{font-family:var(--serif);font-size:2.2rem;font-weight:600;letter-spacing:-.025em;line-height:1.18;margin-bottom:.6rem}
+header h1 em{font-style:normal;color:var(--accent)}
+header .sub{color:var(--fg2);font-size:.95rem;max-width:640px;margin-bottom:1rem}
+header .meta{font-size:.78rem;color:var(--fg3);font-family:var(--mono)}
+header .meta a{color:var(--accent);text-decoration:none}
+
+/* ── Prose ── */
+p.body{color:var(--fg2);font-size:.93rem;line-height:1.75;margin-bottom:1rem;max-width:680px}
+.formula{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:.85rem 1.1rem;font-family:var(--mono);font-size:.84rem;margin:1rem 0 1.2rem;
+  overflow-x:auto;line-height:1.8;
+}
+.note{
+  background:var(--bg2);border-left:3px solid var(--accent);
+  border-radius:0 var(--radius) var(--radius) 0;
+  padding:.85rem 1.15rem;margin:1.2rem 0;font-size:.86rem;color:var(--fg2);line-height:1.7;
+}
+.note b{color:var(--fg)}
+section{margin:2.8rem 0}
+section h2{font-family:var(--serif);font-size:1.4rem;font-weight:600;letter-spacing:-.015em;margin-bottom:.4rem}
+section h2 .n{font-family:var(--mono);font-size:.78rem;color:var(--accent);margin-right:.35rem}
+
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto;margin:1.2rem 0 1.5rem;border-radius:var(--radius-lg);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+thead{background:var(--bg3)}
+thead th{
+  padding:.6rem .85rem;text-align:left;font-weight:600;font-size:.72rem;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--fg3);
+  border-bottom:1px solid var(--border);
+}
+tbody td{padding:.6rem .85rem;border-bottom:1px solid var(--border2);vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--bg2)}
+.rank{display:inline-block;width:22px;height:22px;border-radius:50%;text-align:center;line-height:22px;font-weight:600;font-size:.7rem;margin-right:4px}
+.rank-1{background:var(--safe);color:#fff}
+.rank-2{background:var(--blue);color:#fff}
+.rank-3{background:var(--amber);color:#fff}
+.rank-4{background:var(--danger);color:#fff}
+.pill{
+  display:inline-block;padding:2px 8px;border-radius:20px;font-size:.72rem;font-weight:500;
+  font-family:var(--mono);line-height:1.5;
+}
+.pill-entire{background:rgba(45,122,58,.12);color:var(--safe)}
+.pill-pi{background:rgba(26,101,165,.12);color:var(--blue)}
+.pill-halfpi{background:rgba(192,106,0,.12);color:var(--amber)}
+.pill-real{background:rgba(184,50,48,.12);color:var(--danger)}
+td .detail{color:var(--fg3);font-size:.76rem;margin-top:2px}
+td code{font-family:var(--mono);font-size:.78rem;background:var(--bg3);padding:1px 5px;border-radius:4px}
+
+/* ── Panel ── */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.2rem;margin:1.5rem 0}
+.panel-title{font-size:.76rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg3);margin-bottom:.7rem}
+.ctrls{display:flex;align-items:center;gap:10px;margin:5px 0;font-size:.8rem;color:var(--fg2)}
+.ctrls label{min-width:54px}
+.ctrls input[type=range]{flex:1;height:4px;accent-color:var(--accent)}
+.ctrls .v{min-width:36px;text-align:right;font-weight:500;font-family:var(--mono);font-size:.78rem;color:var(--fg)}
+.chart-box{position:relative;width:100%}
+canvas{width:100%;border-radius:6px}
+.leg{display:flex;flex-wrap:wrap;gap:11px;margin:6px 0 0;font-size:.72rem;color:var(--fg3)}
+.leg span{display:flex;align-items:center;gap:4px}
+.ld{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.readout{
+  margin-top:8px;padding:8px 12px;border-radius:6px;background:var(--bg);
+  font-size:.8rem;font-family:var(--mono);color:var(--fg2);line-height:1.65;
+  border:1px solid var(--border);
+}
+
+/* ── Footer ── */
+footer{border-top:1px solid var(--border);padding:2rem 0 3rem;text-align:center;font-size:.8rem;color:var(--fg3);margin-top:2rem}
+footer a{color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Activation Design from the <em>Convergence-Radius</em> Lens</h1>
+  <p class="sub">
+    Which activation functions introduce complex singularities that shrink the safe step size during training — and which don't?
+    An interactive companion to <em>Ghosts of Softmax</em> (Appendices 2–3).
+  </p>
+  <p class="meta">
+    Piyush Sao · Oak Ridge National Laboratory ·
+    <a href="https://github.com/piyush314/ghosts-of-softmax">github.com/piyush314/ghosts-of-softmax</a>
+  </p>
+</header>
+
+<!-- ============================================
+     Section 1: The idea
+     ============================================ -->
+<section>
+  <h2><span class="n">01</span> The per-neuron radius</h2>
+  <p class="body">
+    Every activation function φ has a set of complex singularities Σ<sub>φ</sub>.
+    A neuron with preactivation h evolving as h(t) = h + tḣ along the update direction
+    hits its nearest singularity at distance:
+  </p>
+  <div class="formula">
+    ρ<sub>j</sub> = min<sub>s ∈ Σ<sub>φ</sub></sub> |s − h<sub>j</sub>| / |ḣ<sub>j</sub>|
+  </div>
+  <p class="body">
+    The overall convergence radius cannot exceed min<sub>j</sub> ρ<sub>j</sub>.
+    Combined with the softmax ghost radius ρ<sub>a</sub> = π/Δ<sub>a</sub>,
+    the conservative bound becomes min(min<sub>j</sub> ρ<sub>j</sub>, ρ<sub>a</sub>).
+  </p>
+  <p class="body">
+    So the question reduces to: <b>where is Σ<sub>φ</sub>?</b>
+  </p>
+</section>
+
+<!-- ============================================
+     Section 2: Singularity table
+     ============================================ -->
+<section>
+  <h2><span class="n">02</span> Activation singularities at a glance</h2>
+  <p class="body">
+    Ranked by distance from the real axis to the nearest complex singularity. Further = better for convergence-radius safety.
+  </p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:30%">Activation</th>
+        <th style="width:24%">Singularity set Σ<sub>φ</sub></th>
+        <th style="width:16%">Distance</th>
+        <th style="width:30%">Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <span class="rank rank-1">1</span><b>Exact GELU</b>
+          <div class="detail">x · Φ(x), erf-based</div>
+        </td>
+        <td><span class="pill pill-entire">Σ = ∅ (entire)</span></td>
+        <td>∞</td>
+        <td>No finite singularity. Structurally best. Non-monotone derivative (slight dip).</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="rank rank-1">1</span><b>RIA</b>
+          <div class="detail">∫ Φ(βt) dt = ReLU ⊛ Gaussian</div>
+        </td>
+        <td><span class="pill pill-entire">Σ = ∅ (entire)</span></td>
+        <td>∞</td>
+        <td>Entire, strictly convex, monotone derivative. Recovers ReLU as β → ∞.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="rank rank-1">1</span><b>Exact GeGLU</b>
+          <div class="detail">GELU-gated linear unit</div>
+        </td>
+        <td><span class="pill pill-entire">Σ = ∅ (entire)</span></td>
+        <td>∞</td>
+        <td>Gated variant with entire gate Φ(x). Radius-clean analogue of SwiGLU.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="rank rank-1">1</span><b>GaussGLU</b>
+          <div class="detail">(W<sub>v</sub>x) ⊙ Φ(βW<sub>g</sub>x)</div>
+        </td>
+        <td><span class="pill pill-entire">Σ = ∅ (entire)</span></td>
+        <td>∞</td>
+        <td>Paper's proposed gated FFN. Gaussian CDF gate — no logistic poles.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="rank rank-2">2</span><b>SiLU / Swish</b>
+          <div class="detail">x · σ(x)</div>
+        </td>
+        <td>z = iπ(2k+1)</td>
+        <td><span class="pill pill-pi">π ≈ 3.14</span></td>
+        <td>Logistic poles at odd multiples of iπ. Same ghost lattice as softmax.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="rank rank-2">2</span><b>Softplus</b>
+          <div class="detail">log(1 + e<sup>x</sup>)</div>
+        </td>
+        <td>z = iπ(2k+1)</td>
+        <td><span class="pill pill-pi">π ≈ 3.14</span></td>
+        <td>Branch points where 1+e<sup>z</sup> = 0. Identical lattice to sigmoid family.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="rank rank-2">2</span><b>Sigmoid</b>
+          <div class="detail">1 / (1 + e<sup>−x</sup>)</div>
+        </td>
+        <td>z = iπ(2k+1)</td>
+        <td><span class="pill pill-pi">π ≈ 3.14</span></td>
+        <td>Poles where 1+e<sup>−z</sup>=0. Derivatives used in many gates.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="rank rank-2">2</span><b>SwiGLU</b>
+          <div class="detail">Swish-gated linear unit</div>
+        </td>
+        <td>z = iπ(2k+1)</td>
+        <td><span class="pill pill-pi">π ≈ 3.14</span></td>
+        <td>Inherits logistic poles from its Swish gate. Widely used in modern LLMs.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="rank rank-3">3</span><b>Tanh</b>
+          <div class="detail">sinh z / cosh z</div>
+        </td>
+        <td>z = i(π/2 + πk)</td>
+        <td><span class="pill pill-halfpi">π/2 ≈ 1.57</span></td>
+        <td>Poles where cosh z = 0. Strictly closer than sigmoid — 2× worse.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="rank rank-3">3</span><b>Tanh-approx GELU</b>
+          <div class="detail">½x(1+tanh(√(2/π)(x+0.044x³)))</div>
+        </td>
+        <td>z = i(π/2 + πk)</td>
+        <td><span class="pill pill-halfpi">π/2 ≈ 1.57</span></td>
+        <td><b>Caution:</b> reintroduces tanh poles that exact GELU avoids. Common in legacy code.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="rank rank-4">4</span><b>ReLU</b>
+          <div class="detail">max(0, x)</div>
+        </td>
+        <td>z = 0 (kink on ℝ)</td>
+        <td><span class="pill pill-real">|h|/|ḣ| → 0</span></td>
+        <td>Not analytic at x = 0. Kink on real axis. Distance to singularity can be arbitrarily small.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="rank rank-4">4</span><b>Leaky ReLU / PReLU</b>
+          <div class="detail">max(αx, x)</div>
+        </td>
+        <td>z = 0 (kink on ℝ)</td>
+        <td><span class="pill pill-real">|h|/|ḣ| → 0</span></td>
+        <td>Same kink structure as ReLU. Piecewise linear, not analytic at breakpoint.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="rank rank-4">4</span><b>Hard-Swish / Hard-Sigmoid</b>
+          <div class="detail">Piecewise linear approximations</div>
+        </td>
+        <td>Multiple kinks on ℝ</td>
+        <td><span class="pill pill-real">min |h−b|/|ḣ|</span></td>
+        <td>Multiple breakpoints. Structurally worst class from analyticity perspective.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="rank rank-4">4</span><b>ReGLU</b>
+          <div class="detail">ReLU-gated linear unit</div>
+        </td>
+        <td>z = 0 (gate kink on ℝ)</td>
+        <td><span class="pill pill-real">|h|/|ḣ| → 0</span></td>
+        <td>Gated variant inherits ReLU kink in the gate branch.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    <b>Entire ≠ unbounded step.</b> A nonconstant entire function like erf(z) grows as exp(z²) off the real axis.
+    "Infinite activation radius" means the activation contributes no <em>finite</em> singularity barrier —
+    the softmax radius ρ<sub>a</sub> and strip growth rate remain as separate constraints.
+  </div>
+</section>
+
+<!-- ============================================
+     Section 3: Interactive RIA vs GELU
+     ============================================ -->
+<section>
+  <h2><span class="n">03</span> RIA vs GELU — interactive comparison</h2>
+  <p class="body">
+    Both are entire (tier 1), but RIA adds strict convexity and a monotone derivative.
+    Drag the β slider to control RIA's sharpness — at β → ∞ it recovers ReLU.
+  </p>
+
+  <div class="formula">
+    <b>RIA:</b>&nbsp; φ<sub>β</sub>(x) = x·Φ(βx) + φ(βx)/β &nbsp;&nbsp;&nbsp;φ′ = Φ(βx) ∈ (0,1) &nbsp;&nbsp;&nbsp;φ″ = β·φ(βx) > 0<br>
+    <b>GELU:</b> φ(x) = x·Φ(x) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;φ′ = Φ(x) + x·φ(x) &nbsp;&nbsp;φ″ goes negative near x ≈ −1.5
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Activations & their derivatives</div>
+    <div class="ctrls">
+      <label>RIA β</label>
+      <input type="range" id="beta" min="0.5" max="10" step="0.1" value="2.0">
+      <span class="v" id="beta-v">2.0</span>
+    </div>
+
+    <div style="margin-top:10px">
+      <div class="chart-box" style="height:220px"><canvas id="c-act"></canvas></div>
+      <div class="leg">
+        <span><span class="ld" style="background:#534AB7"></span>RIA<sub>β</sub></span>
+        <span><span class="ld" style="background:#0E7A5F"></span>GELU</span>
+        <span><span class="ld" style="background:#999"></span>ReLU</span>
+        <span><span class="ld" style="background:#C06A00;opacity:.55"></span>Softplus</span>
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <div class="chart-box" style="height:220px"><canvas id="c-d1"></canvas></div>
+      <div class="leg">
+        <span><span class="ld" style="background:#534AB7"></span>RIA′ = Φ(βx) — monotone, always in (0,1)</span>
+        <span><span class="ld" style="background:#0E7A5F"></span>GELU′ — dips below zero</span>
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <div class="chart-box" style="height:220px"><canvas id="c-d2"></canvas></div>
+      <div class="leg">
+        <span><span class="ld" style="background:#534AB7"></span>RIA″ = β·φ(βx) > 0 — strictly convex</span>
+        <span><span class="ld" style="background:#0E7A5F"></span>GELU″ — goes negative (non-convex pocket)</span>
+      </div>
+    </div>
+
+    <div class="readout" id="readout"></div>
+  </div>
+</section>
+
+<!-- ============================================
+     Section 4: Design principles
+     ============================================ -->
+<section>
+  <h2><span class="n">04</span> Design principles</h2>
+  <p class="body">
+    From the convergence-radius perspective, an ideal activation would:
+  </p>
+  <div class="formula" style="line-height:2">
+    1. <b>Entire</b> — no finite complex singularities (or at least far from ℝ)<br>
+    2. <b>ReLU-like on ℝ</b> — suppress negative side, linear on positive<br>
+    3. <b>Monotone derivative</b> — no dead regions or non-monotonicity<br>
+    4. <b>Controlled strip growth</b> — moderate growth for z = x + iy in the relevant |y| range<br>
+    5. <b>Cheap & stable</b> — avoid tanh approximations that reintroduce poles
+  </div>
+
+  <div class="note">
+    <b>Exact vs approximate GELU matters.</b>
+    The tanh approximation ½x(1 + tanh(√(2/π)(x + 0.044715x³)))
+    reintroduces poles at i(π/2 + πk) — dropping from tier 1 (∞) to tier 3 (π/2 ≈ 1.57).
+    Many frameworks now provide exact erf-based GELU, but legacy codebases may still use the tanh shortcut.
+  </div>
+</section>
+
+</div><!-- wrap -->
+
+<footer>
+  <div class="wrap">
+    <a href="https://github.com/piyush314/ghosts-of-softmax">Ghosts of Softmax</a> · Piyush Sao · Oak Ridge National Laboratory · 2026
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const DK=matchMedia('(prefers-color-scheme:dark)').matches;
+const GR=DK?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.05)';
+const TC=DK?'rgba(255,255,255,0.45)':'rgba(0,0,0,0.4)';
+
+const S2PI=Math.sqrt(2*Math.PI),S2=Math.sqrt(2);
+function gpdf(x){return Math.exp(-.5*x*x)/S2PI}
+function erf(x){const a1=.254829592,a2=-.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=.3275911,s=x<0?-1:1,t=1/(1+p*Math.abs(x));return s*(1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x))}
+function gcdf(x){return .5*(1+erf(x/S2))}
+function sig(x){return 1/(1+Math.exp(-x))}
+
+function ria(x,b){return x*gcdf(b*x)+gpdf(b*x)/b}
+function riaD(x,b){return gcdf(b*x)}
+function riaD2(x,b){return b*gpdf(b*x)}
+function gelu(x){return x*gcdf(x)}
+function geluD(x){return gcdf(x)+x*gpdf(x)}
+function geluD2(x){const p=gpdf(x);return 2*p-x*x*p}
+
+const xV=[];for(let x=-5;x<=5;x+=.04)xV.push(Math.round(x*100)/100);
+
+function mkds(label,data,color,w,dash){
+  return{label,data,borderColor:color,borderWidth:w||2.2,pointRadius:0,showLine:true,fill:false,tension:.25,borderDash:dash||[]}
+}
+function mkopt(yLab,yMin,yMax){
+  return{responsive:true,maintainAspectRatio:false,animation:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y.toFixed(4)}`}}},
+    scales:{
+      x:{type:'linear',min:-5,max:5,title:{display:true,text:'x',font:{size:11,family:'DM Sans'},color:TC},grid:{color:GR},ticks:{color:TC,font:{size:10}}},
+      y:{type:'linear',min:yMin,max:yMax,title:{display:true,text:yLab,font:{size:11,family:'DM Sans'},color:TC},grid:{color:GR},ticks:{color:TC,font:{size:10}}}
+    }
+  }
+}
+
+let cA,cD,cD2;
+function render(){
+  const b=+document.getElementById('beta').value;
+  document.getElementById('beta-v').textContent=b.toFixed(1);
+
+  const geluMinD=Math.min(...xV.map(x=>geluD(x)));
+  const geluMinDx=xV.reduce((best,x)=>geluD(x)<geluD(best)?x:best,0);
+  document.getElementById('readout').innerHTML=
+    `<b>RIA′</b> = Φ(${b.toFixed(1)}x) ∈ (0, 1) — strictly monotone, always positive.\n`+
+    `<b>GELU′</b> dips to <b>${geluMinD.toFixed(4)}</b> near x ≈ ${geluMinDx.toFixed(1)}.\n`+
+    `Both entire (Σ = ∅). As β→∞, RIA → ReLU.`;
+
+  if(cA)cA.destroy();if(cD)cD.destroy();if(cD2)cD2.destroy();
+
+  cA=new Chart(document.getElementById('c-act'),{type:'scatter',
+    data:{datasets:[
+      mkds('RIA',xV.map(x=>({x,y:ria(x,b)})),'#534AB7',2.5),
+      mkds('GELU',xV.map(x=>({x,y:gelu(x)})),'#0E7A5F',2.5),
+      mkds('ReLU',xV.map(x=>({x,y:Math.max(0,x)})),'#999',1.4,[4,3]),
+      mkds('Softplus',xV.map(x=>({x,y:Math.log(1+Math.exp(x))})),'#C06A00',1.4,[4,3]),
+    ]},options:mkopt('φ(x)',-1,5),
+    plugins:[{afterDraw(ch){
+      const c=ch.ctx,ys=ch.scales.y,xs=ch.scales.x,yp=ys.getPixelForValue(0);
+      c.save();c.strokeStyle=DK?'rgba(255,255,255,0.12)':'rgba(0,0,0,0.08)';c.lineWidth=.7;
+      c.beginPath();c.moveTo(xs.left,yp);c.lineTo(xs.right,yp);c.stroke();c.restore();
+    }}]
+  });
+
+  cD=new Chart(document.getElementById('c-d1'),{type:'scatter',
+    data:{datasets:[
+      mkds("RIA′",xV.map(x=>({x,y:riaD(x,b)})),'#534AB7',2.5),
+      mkds("GELU′",xV.map(x=>({x,y:geluD(x)})),'#0E7A5F',2.5),
+      mkds("ReLU′",xV.map(x=>({x,y:x>0?1:x<0?0:.5})),'#999',1.4,[4,3]),
+      mkds("σ(x)",xV.map(x=>({x,y:sig(x)})),'#C06A00',1.4,[4,3]),
+    ]},options:mkopt("φ′(x)",-.18,1.15),
+    plugins:[{afterDraw(ch){
+      const c=ch.ctx,ys=ch.scales.y,xs=ch.scales.x,yp=ys.getPixelForValue(0);
+      c.save();c.strokeStyle='#B83230';c.lineWidth=.7;c.setLineDash([3,3]);
+      c.beginPath();c.moveTo(xs.left,yp);c.lineTo(xs.right,yp);c.stroke();c.restore();
+      c.fillStyle=DK?'rgba(184,50,48,0.07)':'rgba(184,50,48,0.05)';
+      c.fillRect(xs.left,yp,xs.right-xs.left,ys.bottom-yp);
+      c.fillStyle='#B83230';c.font='11px DM Sans';c.textAlign='left';
+      c.fillText('φ′ < 0 (GELU dips here)',xs.left+6,yp+13);
+    }}]
+  });
+
+  cD2=new Chart(document.getElementById('c-d2'),{type:'scatter',
+    data:{datasets:[
+      mkds("RIA″",xV.map(x=>({x,y:riaD2(x,b)})),'#534AB7',2.5),
+      mkds("GELU″",xV.map(x=>({x,y:geluD2(x)})),'#0E7A5F',2.5),
+    ]},options:mkopt("φ″(x)",-.55,1.6),
+    plugins:[{afterDraw(ch){
+      const c=ch.ctx,ys=ch.scales.y,xs=ch.scales.x,yp=ys.getPixelForValue(0);
+      c.save();c.strokeStyle='#B83230';c.lineWidth=.7;c.setLineDash([3,3]);
+      c.beginPath();c.moveTo(xs.left,yp);c.lineTo(xs.right,yp);c.stroke();c.restore();
+      c.fillStyle=DK?'rgba(184,50,48,0.07)':'rgba(184,50,48,0.05)';
+      c.fillRect(xs.left,yp,xs.right-xs.left,ys.bottom-yp);
+      c.fillStyle='#B83230';c.font='11px DM Sans';c.textAlign='left';
+      c.fillText('non-convex region (φ″ < 0)',xs.left+6,yp+13);
+    }}]
+  });
+}
+
+document.getElementById('beta').addEventListener('input',render);
+render();
+</script>
+</body>
+</html>
