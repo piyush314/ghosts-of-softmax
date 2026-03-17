@@ -113,6 +113,7 @@ GHOSTS_RUN_SMOKE=1 pytest tests/test_smoke_runs.py -q
 | Fig 7 | JVP phase transition | [`fig7.ipynb`](notebooks/fig7.ipynb) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/fig7.ipynb) | ~5 min |
 | Fig 9 | Temperature fingerprint | [`fig9.ipynb`](notebooks/fig9.ipynb) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/fig9.ipynb) | ~10 min |
 | Fig 10 | Architecture grid | [`fig10.ipynb`](notebooks/fig10.ipynb) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/fig10.ipynb) | ~15 min |
+| Fig 10 variant | Exact actual-step Adam controller at 10000x spike | [`fig10_exact_actual_adam.ipynb`](notebooks/fig10_exact_actual_adam.ipynb) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/fig10_exact_actual_adam.ipynb) | ~10 min |
 | ResNet-18 | CIFAR-10 instability | [`resnet18.ipynb`](notebooks/resnet18.ipynb) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/resnet18.ipynb) | ~30 min |
 | Ghost envelope | Re/Im scatter + bands | [`ghostenvelope.ipynb`](notebooks/ghostenvelope.ipynb) | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/piyush314/ghosts-of-softmax/blob/main/notebooks/ghostenvelope.ipynb) | ~10 min |
 
@@ -122,9 +123,9 @@ GHOSTS_RUN_SMOKE=1 pytest tests/test_smoke_runs.py -q
 |----------|-------|
 | [`00_step_controller_intro.ipynb`](tutorials/00_step_controller_intro.ipynb) | First tutorial: fixed SGD vs rho-capped SGD vs rho-set SGD |
 | [`01_adam_controller.ipynb`](tutorials/01_adam_controller.ipynb) | Second tutorial: exact directional Adam controller vs earlier rho-scaled alternative |
-| [`02_momentum_controller.ipynb`](tutorials/02_momentum_controller.ipynb) | Third tutorial: exact momentum-SGD controller vs earlier rho-scaled alternative |
-| [`03_binary_radius.ipynb`](tutorials/03_binary_radius.ipynb) | Binary softmax convergence radius |
-| [`04_kl_bound.ipynb`](tutorials/04_kl_bound.ipynb) | KL divergence bound |
+| [`02_momentum_controller.ipynb`](tutorials/02_momentum_controller.ipynb) | Additional controller tutorial: exact momentum-SGD controller vs earlier rho-scaled alternative |
+| [`02_binary_radius.ipynb`](tutorials/02_binary_radius.ipynb) | Binary softmax convergence radius |
+| [`03_kl_bound.ipynb`](tutorials/03_kl_bound.ipynb) | KL divergence bound |
 
 ## Experiments
 
