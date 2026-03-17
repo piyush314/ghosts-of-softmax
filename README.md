@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > **Ghosts of Softmax: Complex Singularities That Limit Safe Step Sizes in Cross-Entropy**
-> [[Paper (PDF)](assets/paper.pdf)] · arXiv link coming soon
+> [[Paper (PDF)](assets/paper.pdf)] · [arXiv:2603.13552](https://arxiv.org/abs/2603.13552)
 
 Large-scale training still suffers abrupt instabilities despite
 decades of work on loss geometry, curvature, and optimizer design. A
@@ -122,8 +122,9 @@ GHOSTS_RUN_SMOKE=1 pytest tests/test_smoke_runs.py -q
 |----------|-------|
 | [`00_step_controller_intro.ipynb`](tutorials/00_step_controller_intro.ipynb) | First tutorial: fixed SGD vs rho-capped SGD vs rho-set SGD |
 | [`01_adam_controller.ipynb`](tutorials/01_adam_controller.ipynb) | Second tutorial: exact directional Adam controller vs earlier rho-scaled alternative |
-| [`02_binary_radius.ipynb`](tutorials/02_binary_radius.ipynb) | Binary softmax convergence radius |
-| [`03_kl_bound.ipynb`](tutorials/03_kl_bound.ipynb) | KL divergence bound |
+| [`02_momentum_controller.ipynb`](tutorials/02_momentum_controller.ipynb) | Third tutorial: exact momentum-SGD controller vs earlier rho-scaled alternative |
+| [`03_binary_radius.ipynb`](tutorials/03_binary_radius.ipynb) | Binary softmax convergence radius |
+| [`04_kl_bound.ipynb`](tutorials/04_kl_bound.ipynb) | KL divergence bound |
 
 ## Experiments
 
