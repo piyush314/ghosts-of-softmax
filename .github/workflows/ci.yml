@@ -4,6 +4,15 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -53,11 +62,26 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install --no-build-isolation -e .
           python -m pip install nbconvert jupyter ipykernel
-      - name: Execute notebooks
+      - name: Execute and convert notebooks to HTML
         run: |
-          mkdir -p /tmp/notebooks
-          jupyter nbconvert --to notebook --execute tutorials/00_step_controller_intro.ipynb --output /tmp/notebooks/00_step_controller_intro.executed.ipynb
-          jupyter nbconvert --to notebook --execute tutorials/01_adam_controller.ipynb --output /tmp/notebooks/01_adam_controller.executed.ipynb
-          jupyter nbconvert --to notebook --execute tutorials/02_momentum_controller.ipynb --output /tmp/notebooks/02_momentum_controller.executed.ipynb
-          jupyter nbconvert --to notebook --execute tutorials/03_binary_radius.ipynb --output /tmp/notebooks/03_binary_radius.executed.ipynb
-          jupyter nbconvert --to notebook --execute tutorials/04_kl_bound.ipynb --output /tmp/notebooks/04_kl_bound.executed.ipynb
+          mkdir -p docs/tutorials
+          for nb in tutorials/*.ipynb; do
+            name=$(basename "$nb" .ipynb)
+            jupyter nbconvert --to html --execute "$nb" --output-dir docs/tutorials --output "$name.html"
+          done
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: notebooks
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
