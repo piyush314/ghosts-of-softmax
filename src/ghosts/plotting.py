@@ -25,6 +25,10 @@ PALETTE = {
 }
 
 
+MONO_CHAIN = ["Cascadia Mono", "JetBrains Mono",
+              "Fantasque Sans Mono", "DejaVu Sans Mono"]
+
+
 def apply_plot_style(
     *,
     font_size: int = 10,
@@ -32,12 +36,19 @@ def apply_plot_style(
     label_size: int = 10,
     tick_size: int = 9,
     legend_size: int = 9,
+    mono: bool = False,
 ) -> None:
     """Apply a consistent publication-style matplotlib theme."""
+    if mono:
+        family, fallback = "monospace", {"font.monospace": MONO_CHAIN}
+    else:
+        family = "sans-serif"
+        fallback = {"font.sans-serif": ["Arial", "Helvetica Neue",
+                                        "Helvetica", "DejaVu Sans"]}
     plt.rcParams.update(
         {
-            "font.family": "sans-serif",
-            "font.sans-serif": ["Arial", "Helvetica Neue", "Helvetica", "DejaVu Sans"],
+            "font.family": family,
+            **fallback,
             "font.size": font_size,
             "axes.titlesize": title_size,
             "axes.titleweight": "bold",
@@ -50,8 +61,9 @@ def apply_plot_style(
             "ytick.labelsize": tick_size,
             "xtick.color": PALETTE["dark_gray"],
             "ytick.color": PALETTE["dark_gray"],
-            "grid.color": PALETTE["light_gray"],
-            "grid.linewidth": 0.5,
+            "grid.color": "#999999" if mono else PALETTE["light_gray"],
+            "grid.alpha": 1.0 if mono else 0.5,
+            "grid.linewidth": 0.8 if mono else 0.5,
             "figure.facecolor": "white",
             "axes.facecolor": "white",
             "legend.frameon": False,
