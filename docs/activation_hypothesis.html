@@ -46,9 +46,11 @@ header .meta a{color:var(--accent);text-decoration:none}
 p.body{color:var(--fg2);font-size:.93rem;line-height:1.75;margin-bottom:1rem;max-width:680px}
 .formula{
   background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
-  padding:.85rem 1.1rem;font-family:var(--mono);font-size:.84rem;margin:1rem 0 1.2rem;
+  padding:.85rem 1.1rem;font-size:1rem;margin:1rem 0 1.2rem;
   overflow-x:auto;line-height:1.8;
 }
+.formula mjx-container[display="true"]{margin:0 !important;text-align:left !important;overflow-x:auto;overflow-y:hidden;padding:.1rem 0}
+.note mjx-container,p.body mjx-container,.leg mjx-container,.readout mjx-container,.ctrls label mjx-container{margin:0 !important}
 .note{
   background:var(--bg2);border-left:3px solid var(--accent);
   border-radius:0 var(--radius) var(--radius) 0;
@@ -101,7 +103,7 @@ canvas{width:100%;border-radius:6px}
 .ld{width:8px;height:8px;border-radius:2px;flex-shrink:0}
 .readout{
   margin-top:8px;padding:8px 12px;border-radius:6px;background:var(--bg);
-  font-size:.8rem;font-family:var(--mono);color:var(--fg2);line-height:1.65;
+  font-size:.8rem;color:var(--fg2);line-height:1.65;
   border:1px solid var(--border);
 }
 
@@ -109,6 +111,18 @@ canvas{width:100%;border-radius:6px}
 footer{border-top:1px solid var(--border);padding:2rem 0 3rem;text-align:center;font-size:.8rem;color:var(--fg3);margin-top:2rem}
 footer a{color:var(--accent);text-decoration:none}
 </style>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']]
+  },
+  options: {
+    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -131,20 +145,22 @@ footer a{color:var(--accent);text-decoration:none}
 <section>
   <h2><span class="n">01</span> The per-neuron radius</h2>
   <p class="body">
-    Every activation function φ has a set of complex singularities Σ<sub>φ</sub>.
-    A neuron with preactivation h evolving as h(t) = h + tḣ along the update direction
+    Every activation function \( \varphi \) has a set of complex singularities \( \Sigma_\varphi \).
+    A neuron with preactivation \( h \) evolving as \( h(t) = h + t\dot h \) along the update direction
     hits its nearest singularity at distance:
   </p>
   <div class="formula">
-    ρ<sub>j</sub> = min<sub>s ∈ Σ<sub>φ</sub></sub> |s − h<sub>j</sub>| / |ḣ<sub>j</sub>|
+    \[
+      \rho_j = \min_{s \in \Sigma_\varphi} \frac{|s - h_j|}{|\dot h_j|}
+    \]
   </div>
   <p class="body">
-    The overall convergence radius cannot exceed min<sub>j</sub> ρ<sub>j</sub>.
-    Combined with the softmax ghost radius ρ<sub>a</sub> = π/Δ<sub>a</sub>,
-    the conservative bound becomes min(min<sub>j</sub> ρ<sub>j</sub>, ρ<sub>a</sub>).
+    The overall convergence radius cannot exceed \( \min_j \rho_j \).
+    Combined with the softmax ghost radius \( \rho_a = \pi/\Delta_a \),
+    the conservative bound becomes \( \min(\min_j \rho_j, \rho_a) \).
   </p>
   <p class="body">
-    So the question reduces to: <b>where is Σ<sub>φ</sub>?</b>
+    So the question reduces to: <b>where is \( \Sigma_\varphi \)?</b>
   </p>
 </section>
 
@@ -299,9 +315,9 @@ footer a{color:var(--accent);text-decoration:none}
   </div>
 
   <div class="note">
-    <b>Entire ≠ unbounded step.</b> A nonconstant entire function like erf(z) grows as exp(z²) off the real axis.
+    <b>Entire ≠ unbounded step.</b> A nonconstant entire function like \( \mathrm{erf}(z) \) grows as \( \exp(z^2) \) off the real axis.
     "Infinite activation radius" means the activation contributes no <em>finite</em> singularity barrier —
-    the softmax radius ρ<sub>a</sub> and strip growth rate remain as separate constraints.
+    the softmax radius \( \rho_a \) and strip growth rate remain as separate constraints.
   </div>
 </section>
 
@@ -312,12 +328,24 @@ footer a{color:var(--accent);text-decoration:none}
   <h2><span class="n">03</span> RIA vs GELU — interactive comparison</h2>
   <p class="body">
     Both are entire (tier 1), but RIA adds strict convexity and a monotone derivative.
-    Drag the β slider to control RIA's sharpness — at β → ∞ it recovers ReLU.
+    Drag the \( \beta \) slider to control RIA's sharpness — at \( \beta \to \infty \) it recovers ReLU.
   </p>
 
   <div class="formula">
-    <b>RIA:</b>&nbsp; φ<sub>β</sub>(x) = x·Φ(βx) + φ(βx)/β &nbsp;&nbsp;&nbsp;φ′ = Φ(βx) ∈ (0,1) &nbsp;&nbsp;&nbsp;φ″ = β·φ(βx) > 0<br>
-    <b>GELU:</b> φ(x) = x·Φ(x) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;φ′ = Φ(x) + x·φ(x) &nbsp;&nbsp;φ″ goes negative near x ≈ −1.5
+    \[
+      \varphi_\beta(x) = x\Phi(\beta x) + \frac{\phi(\beta x)}{\beta},
+      \qquad
+      \varphi_\beta'(x) = \Phi(\beta x) \in (0,1),
+      \qquad
+      \varphi_\beta''(x) = \beta \phi(\beta x) > 0
+    \]
+    \[
+      \mathrm{GELU}(x) = x\Phi(x),
+      \qquad
+      \mathrm{GELU}'(x) = \Phi(x) + x\phi(x),
+      \qquad
+      \mathrm{GELU}''(x) < 0 \quad (x \approx -1.5)
+    \]
   </div>
 
   <div class="panel">
@@ -376,8 +404,8 @@ footer a{color:var(--accent);text-decoration:none}
 
   <div class="note">
     <b>Exact vs approximate GELU matters.</b>
-    The tanh approximation ½x(1 + tanh(√(2/π)(x + 0.044715x³)))
-    reintroduces poles at i(π/2 + πk) — dropping from tier 1 (∞) to tier 3 (π/2 ≈ 1.57).
+    The tanh approximation \( \frac{1}{2}x(1 + \tanh(\sqrt{2/\pi}(x + 0.044715x^3))) \)
+    reintroduces poles at \( i(\pi/2 + \pi k) \), dropping from tier 1 (\( \infty \)) to tier 3 (\( \pi/2 \approx 1.57 \)).
     Many frameworks now provide exact erf-based GELU, but legacy codebases may still use the tanh shortcut.
   </div>
 </section>
@@ -395,6 +423,20 @@ footer a{color:var(--accent);text-decoration:none}
 const DK=matchMedia('(prefers-color-scheme:dark)').matches;
 const GR=DK?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.05)';
 const TC=DK?'rgba(255,255,255,0.45)':'rgba(0,0,0,0.4)';
+
+function typesetMath(elements) {
+  if (!window.MathJax?.typesetPromise) return;
+  const list = Array.isArray(elements) ? elements : [elements];
+  if (window.MathJax.typesetClear) window.MathJax.typesetClear(list);
+  window.MathJax.typesetPromise(list).catch((err) => console.error('MathJax typeset failed', err));
+}
+
+function setMathHTML(id, html) {
+  const el = typeof id === 'string' ? document.getElementById(id) : id;
+  if (!el) return;
+  el.innerHTML = html;
+  typesetMath([el]);
+}
 
 const S2PI=Math.sqrt(2*Math.PI),S2=Math.sqrt(2);
 function gpdf(x){return Math.exp(-.5*x*x)/S2PI}
@@ -431,10 +473,11 @@ function render(){
 
   const geluMinD=Math.min(...xV.map(x=>geluD(x)));
   const geluMinDx=xV.reduce((best,x)=>geluD(x)<geluD(best)?x:best,0);
-  document.getElementById('readout').innerHTML=
-    `<b>RIA′</b> = Φ(${b.toFixed(1)}x) ∈ (0, 1) — strictly monotone, always positive.\n`+
-    `<b>GELU′</b> dips to <b>${geluMinD.toFixed(4)}</b> near x ≈ ${geluMinDx.toFixed(1)}.\n`+
-    `Both entire (Σ = ∅). As β→∞, RIA → ReLU.`;
+  setMathHTML('readout',
+    String.raw`\(\mathrm{RIA}'(x) = \Phi(${b.toFixed(1)}x) \in (0,1)\), so it stays strictly monotone and positive. ` +
+    String.raw`\(\mathrm{GELU}'(x)\) dips to ${geluMinD.toFixed(4)} near \(x \approx ${geluMinDx.toFixed(1)}\). ` +
+    String.raw`Both are entire \((\Sigma = \emptyset)\), and as \(\beta \to \infty\), RIA approaches ReLU.`
+  );
 
   if(cA)cA.destroy();if(cD)cD.destroy();if(cD2)cD2.destroy();
 

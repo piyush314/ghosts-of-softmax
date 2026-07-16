@@ -38,7 +38,10 @@ header .sub{color:var(--fg2);font-size:.93rem;max-width:660px;margin-bottom:1rem
 header .meta{font-size:.78rem;color:var(--fg3);font-family:var(--mono)}
 header .meta a{color:var(--accent);text-decoration:none}
 p.body{color:var(--fg2);font-size:.93rem;line-height:1.75;margin-bottom:1rem;max-width:680px}
-.formula{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:.85rem 1.1rem;font-family:var(--mono);font-size:.82rem;margin:1rem 0 1.2rem;overflow-x:auto;line-height:1.9}
+.formula{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:.85rem 1.1rem;font-size:1rem;margin:1rem 0 1.2rem;overflow-x:auto;line-height:1.7}
+.formula mjx-container[display="true"]{margin:0 !important;text-align:left !important;overflow-x:auto;overflow-y:hidden;padding:.1rem 0}
+.leg mjx-container,.note mjx-container,p.body mjx-container,td mjx-container,.readout mjx-container,.ctrls label mjx-container{margin:0 !important}
+.math-inline{white-space:nowrap}
 .note{background:var(--bg2);border-left:3px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;padding:.85rem 1.15rem;margin:1.2rem 0;font-size:.86rem;color:var(--fg2);line-height:1.7}
 .note b{color:var(--fg)}
 .note.warn{border-left-color:var(--amber)}
@@ -70,7 +73,7 @@ canvas{width:100%;border-radius:6px}
 .leg{display:flex;flex-wrap:wrap;gap:11px;margin:6px 0 0;font-size:.72rem;color:var(--fg3)}
 .leg span{display:flex;align-items:center;gap:4px}
 .ld{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-.readout{margin-top:8px;padding:8px 12px;border-radius:6px;background:var(--bg);font-size:.8rem;font-family:var(--mono);color:var(--fg2);line-height:1.65;border:1px solid var(--border)}
+.readout{margin-top:8px;padding:8px 12px;border-radius:6px;background:var(--bg);font-size:.8rem;color:var(--fg2);line-height:1.65;border:1px solid var(--border)}
 .impl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:1rem 0}
 .impl-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:1rem}
 .impl-card h4{font-size:.88rem;font-weight:600;margin-bottom:.3rem}
@@ -82,6 +85,18 @@ canvas{width:100%;border-radius:6px}
 footer{border-top:1px solid var(--border);padding:2rem 0 3rem;text-align:center;font-size:.8rem;color:var(--fg3);margin-top:2rem}
 footer a{color:var(--accent);text-decoration:none}
 </style>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']]
+  },
+  options: {
+    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -89,7 +104,7 @@ footer a{color:var(--accent);text-decoration:none}
 <header>
   <h1>Analytic Normalization: <em>Removing the Singularity at Zero</em></h1>
   <p class="sub">
-    LayerNorm and RMSNorm divide by √v — which has a branch-point singularity at v = 0.
+    LayerNorm and RMSNorm divide by \( \sqrt{v} \), which has a branch-point singularity at \( v = 0 \).
     The Weierstrass transform (Gaussian convolution) replaces it with an entire function,
     eliminating the finite ghost barrier. An interactive companion to <em>Ghosts of Softmax</em>, Appendix 3.
   </p>
@@ -105,27 +120,31 @@ footer a{color:var(--accent);text-decoration:none}
 <section>
   <h2><span class="n">01</span> The singularity in standard normalization</h2>
   <p class="body">
-    LayerNorm and RMSNorm both rely on a scale factor of the form f(v) = 1/√v, where v is a variance
+    LayerNorm and RMSNorm both rely on a scale factor of the form \( f(v) = 1/\sqrt{v} \), where \( v \) is a variance
     or mean-square quantity computed from activations. On the positive reals this is perfectly well-behaved.
-    But in the complex plane, 1/√v has a <b>branch-point singularity at v = 0</b>.
+    But in the complex plane, \( 1/\sqrt{v} \) has a <b>branch-point singularity at \( v = 0 \)</b>.
   </p>
   <p class="body">
-    During the forward pass, v is always positive. But from the convergence-radius perspective,
-    the singularity at v = 0 is still relevant — it limits the Taylor convergence radius of any function that
-    depends on 1/√v. If a neuron's variance v evolves as v(t) = v₀ + ṫv along the update direction,
-    the singularity lies at distance |v₀|/|v̇| from the current point. For neurons with small variance
+    During the forward pass, \( v \) is always positive. But from the convergence-radius perspective,
+    the singularity at \( v = 0 \) is still relevant: it limits the Taylor convergence radius of any function that
+    depends on \( 1/\sqrt{v} \). If a neuron's variance evolves as \( v(t) = v_0 + t\dot v \) along the update direction,
+    the singularity lies at distance \( |v_0|/|\dot v| \) from the current point. For neurons with small variance
     (common in normalized networks), this can be very close.
   </p>
 
   <div class="formula">
-    <b>Standard:</b>&nbsp; f(v) = 1/√v &nbsp;&nbsp;&nbsp;→&nbsp; branch point at v = 0 &nbsp;&nbsp;&nbsp;→&nbsp; ρ = |v₀|/|v̇|<br>
-    <b>Smoothed:</b> f̃<sub>σ</sub>(v) = Weierstrass<sub>σ</sub>[1/√max(0,·)](v) &nbsp;&nbsp;&nbsp;→&nbsp; <b>entire</b> &nbsp;&nbsp;&nbsp;→&nbsp; ρ = ∞
+    \[
+      f(v) = \frac{1}{\sqrt{v}}, \qquad \rho = \frac{|v_0|}{|\dot v|}
+    \]
+    \[
+      \tilde f_\sigma(v) = \mathcal{W}_\sigma\!\left[\frac{1}{\sqrt{\max(0,\cdot)}}\right](v), \qquad \rho = \infty
+    \]
   </div>
 
   <div class="note warn">
     <b>Why this matters:</b> In normalized networks, many preactivations cluster near zero.
-    The normalization singularity at v = 0 can become the binding constraint on ρ —
-    tighter than the softmax ghosts at distance π/Δ<sub>a</sub>.
+    The normalization singularity at \( v = 0 \) can become the binding constraint on \( \rho \),
+    tighter than the softmax ghosts at distance \( \pi / \Delta_a \).
     The tiny-transformer experiment in the paper (Table 2) found that the FFN radius was the bottleneck
     in 94% of early-training steps.
   </div>
@@ -137,31 +156,35 @@ footer a{color:var(--accent);text-decoration:none}
 <section>
   <h2><span class="n">02</span> The fix: Gaussian convolution</h2>
   <p class="body">
-    The Weierstrass transform convolves f with a Gaussian of width σ, smearing out the singularity:
+    The Weierstrass transform convolves \( f \) with a Gaussian of width \( \sigma \), smearing out the singularity:
   </p>
 
   <div class="formula">
-    f̃<sub>σ</sub>(v) = 1/(σ√(2π)) ∫<sub>0</sub><sup>∞</sup> (1/√t) · exp(−(v−t)²/(2σ²)) dt
+    \[
+      \tilde f_\sigma(v) = \frac{1}{\sigma\sqrt{2\pi}} \int_0^\infty \frac{1}{\sqrt{t}} \exp\!\left(-\frac{(v-t)^2}{2\sigma^2}\right)\,dt
+    \]
   </div>
 
   <p class="body">
     Because the Gaussian is entire and the integrand is absolutely integrable, this integral defines
-    an <b>entire function of v</b>. The singularity at v = 0 is gone. In closed form:
+    an <b>entire function of \( v \)</b>. The singularity at \( v = 0 \) is gone. In closed form:
   </p>
 
   <div class="formula">
-    f̃<sub>σ</sub>(v) = C · exp(−v²/(4σ²)) · D<sub>−1/2</sub>(−v/σ)
+    \[
+      \tilde f_\sigma(v) = C \exp\!\left(-\frac{v^2}{4\sigma^2}\right) D_{-1/2}\!\left(-\frac{v}{\sigma}\right)
+    \]
   </div>
 
   <p class="body">
-    where D<sub>−1/2</sub> is a parabolic cylinder function — a solution of Weber's equation.
+    where \( D_{-1/2} \) is a parabolic cylinder function, a solution of Weber's equation.
     Parabolic cylinder functions are entire: no poles, no branch cuts.
-    As σ → 0, f̃<sub>σ</sub> recovers 1/√v for v > 0.
+    As \( \sigma \to 0 \), \( \tilde f_\sigma \) recovers \( 1/\sqrt{v} \) for \( v > 0 \).
   </p>
 
   <div class="note good">
     <b>The same principle as RIA.</b> RIA removes ReLU's kink by convolving with a Gaussian. Here, we
-    remove 1/√v's branch point by the same mechanism. Gaussian convolution is a universal singularity eraser.
+    remove the branch point of \( 1/\sqrt{v} \) by the same mechanism. Gaussian convolution is a universal singularity eraser.
   </div>
 </section>
 
@@ -171,14 +194,14 @@ footer a{color:var(--accent);text-decoration:none}
 <section>
   <h2><span class="n">03</span> Interactive comparison</h2>
   <p class="body">
-    See how the smoothed normalization compares to standard 1/√v.
-    The smoothing width σ controls the tradeoff: small σ is closer to the original but retains near-singular behavior; large σ is fully smooth but deviates more.
+    See how the smoothed normalization compares to standard \( 1/\sqrt{v} \).
+    The smoothing width \( \sigma \) controls the tradeoff: small \( \sigma \) is closer to the original but retains near-singular behavior; large \( \sigma \) is fully smooth but deviates more.
   </p>
 
   <div class="panel">
     <div class="panel-title">Normalization scale factor f(v) and its derivative</div>
     <div class="ctrls">
-      <label>Width σ</label>
+      <label>Width \( \sigma \)</label>
       <input type="range" id="sigma" min="0.05" max="1.5" step="0.01" value="0.3">
       <span class="v" id="sigma-v">0.30</span>
     </div>
@@ -186,26 +209,26 @@ footer a{color:var(--accent);text-decoration:none}
     <div style="margin-top:10px">
       <div class="chart-box" style="height:260px"><canvas id="c-fn"></canvas></div>
       <div class="leg">
-        <span><span class="ld" style="background:#B83230"></span>Standard 1/√v — singular at 0</span>
-        <span><span class="ld" style="background:#534AB7"></span>Smoothed f̃<sub>σ</sub>(v) — entire</span>
-        <span><span class="ld" style="background:#999;opacity:.5"></span>1/√max(ε,v) with ε-clamp</span>
+        <span><span class="ld" style="background:#B83230"></span>Standard \( 1/\sqrt{v} \) singular at \( 0 \)</span>
+        <span><span class="ld" style="background:#534AB7"></span>Smoothed \( \tilde f_\sigma(v) \) is entire</span>
+        <span><span class="ld" style="background:#999;opacity:.5"></span>\( 1/\sqrt{\max(\varepsilon,v)} \) with \( \varepsilon \)-clamp</span>
       </div>
     </div>
 
     <div style="margin-top:16px">
       <div class="chart-box" style="height:260px"><canvas id="c-deriv"></canvas></div>
       <div class="leg">
-        <span><span class="ld" style="background:#B83230"></span>Standard: −1/(2v<sup>3/2</sup>) — blows up</span>
-        <span><span class="ld" style="background:#534AB7"></span>Smoothed: f̃′<sub>σ</sub>(v) — bounded</span>
+        <span><span class="ld" style="background:#B83230"></span>Standard \( -1/(2v^{3/2}) \) blows up</span>
+        <span><span class="ld" style="background:#534AB7"></span>Smoothed \( \tilde f_\sigma'(v) \) stays bounded</span>
       </div>
     </div>
 
     <div style="margin-top:16px">
       <div class="chart-box" style="height:260px"><canvas id="c-radius"></canvas></div>
       <div class="leg">
-        <span><span class="ld" style="background:#B83230"></span>Standard ρ = v/|v̇| — vanishes near 0</span>
+        <span><span class="ld" style="background:#B83230"></span>Standard \( \rho = v/|\dot v| \) vanishes near \( 0 \)</span>
         <span><span class="ld" style="background:#534AB7"></span>Smoothed: no finite singularity barrier</span>
-        <span><span class="ld" style="background:#0E7A5F;opacity:.5"></span>Softmax ρ<sub>a</sub> = π/Δ<sub>a</sub> (reference line)</span>
+        <span><span class="ld" style="background:#0E7A5F;opacity:.5"></span>Softmax \( \rho_a = \pi/\Delta_a \) reference line</span>
       </div>
     </div>
 
@@ -233,38 +256,38 @@ footer a{color:var(--accent);text-decoration:none}
     <tbody>
       <tr>
         <td><b>LayerNorm</b><div style="color:var(--fg3);font-size:.76rem">Ba et al. 2016</div></td>
-        <td><code>1/√(Var(x)+ε)</code></td>
-        <td>Branch point at Var = −ε</td>
+        <td><span class="math-inline">\( 1/\sqrt{\mathrm{Var}(x)+\varepsilon} \)</span></td>
+        <td>Branch point at \( \mathrm{Var}(x) = -\varepsilon \)</td>
         <td><span class="pill pill-no">No</span></td>
-        <td>ε shifts singularity off zero but doesn't remove it. In complex plane, still limits radius.</td>
+        <td>\( \varepsilon \) shifts the singularity off zero but does not remove it.</td>
       </tr>
       <tr>
         <td><b>RMSNorm</b><div style="color:var(--fg3);font-size:.76rem">Zhang & Sennrich 2019</div></td>
-        <td><code>1/√(mean(x²)+ε)</code></td>
-        <td>Branch point at mean(x²) = −ε</td>
+        <td><span class="math-inline">\( 1/\sqrt{\mathrm{mean}(x^2)+\varepsilon} \)</span></td>
+        <td>Branch point at \( \mathrm{mean}(x^2) = -\varepsilon \)</td>
         <td><span class="pill pill-no">No</span></td>
         <td>Same structure as LayerNorm without centering. Same singularity class.</td>
       </tr>
       <tr>
         <td><b>BatchNorm</b><div style="color:var(--fg3);font-size:.76rem">Ioffe & Szegedy 2015</div></td>
-        <td><code>1/√(Var_batch+ε)</code></td>
+        <td><span class="math-inline">\( 1/\sqrt{\mathrm{Var}_{\mathrm{batch}}+\varepsilon} \)</span></td>
         <td>Branch point + running stats</td>
         <td><span class="pill pill-no">No</span></td>
         <td>Running statistics add extra fragility — can become corrupted during spikes (see paper Fig. 10).</td>
       </tr>
       <tr>
         <td><b>ε-clamped</b><div style="color:var(--fg3);font-size:.76rem">Common implementation</div></td>
-        <td><code>1/√max(ε, v)</code></td>
-        <td>Kink at v = ε (not analytic)</td>
+        <td><span class="math-inline">\( 1/\sqrt{\max(\varepsilon, v)} \)</span></td>
+        <td>Kink at \( v = \varepsilon \) (not analytic)</td>
         <td><span class="pill pill-no">No</span></td>
         <td>Replaces branch point with a ReLU-like kink. Piecewise, not analytic — strictly worse from radius lens.</td>
       </tr>
       <tr style="background:var(--bg2)">
         <td><b>Weierstrass-smoothed</b><div style="color:var(--accent);font-size:.76rem">This paper (proposed)</div></td>
-        <td><code>C·exp(−v²/4σ²)·D<sub>−½</sub>(−v/σ)</code></td>
+        <td><span class="math-inline">\( C e^{-v^2/(4\sigma^2)} D_{-1/2}(-v/\sigma) \)</span></td>
         <td>None (entire)</td>
         <td><span class="pill pill-yes">Yes</span></td>
-        <td>Gaussian convolution of 1/√max(0,v). Parabolic cylinder function — entire. No finite ghost barrier.</td>
+        <td>Gaussian convolution of \( 1/\sqrt{\max(0,v)} \). No finite ghost barrier.</td>
       </tr>
       <tr style="background:var(--bg2)">
         <td><b>Goldschmidt approx</b><div style="color:var(--accent);font-size:.76rem">This paper (route 3)</div></td>
@@ -275,7 +298,7 @@ footer a{color:var(--accent);text-decoration:none}
       </tr>
       <tr style="background:var(--bg2)">
         <td><b>Randomized smoothing</b><div style="color:var(--accent);font-size:.76rem">This paper (route 2)</div></td>
-        <td><code>E<sub>ξ~N(0,σ²)</sub>[(max(0,v+ξ)+ε)<sup>−½</sup>]</code></td>
+        <td><span class="math-inline">\( E_{\xi \sim \mathcal{N}(0,\sigma^2)}[(\max(0,v+\xi)+\varepsilon)^{-1/2}] \)</span></td>
         <td>Stochastic — entire in expectation</td>
         <td><span class="pill pill-na">Stoch.</span></td>
         <td>Recovers the analytic function in expectation. Adds noise to forward pass — natural regularizer.</td>
@@ -299,7 +322,7 @@ footer a{color:var(--accent);text-decoration:none}
     <div class="impl-card">
       <h4>Taylor series</h4>
       <p>
-        Since f̃<sub>σ</sub> is entire, its Maclaurin series converges everywhere.
+        Since \( \tilde f_\sigma \) is entire, its Maclaurin series converges everywhere.
         Precompute coefficients offline, evaluate a truncated polynomial at runtime.
         Accuracy controlled by truncation order.
       </p>
@@ -308,7 +331,7 @@ footer a{color:var(--accent);text-decoration:none}
     <div class="impl-card">
       <h4>Randomized smoothing</h4>
       <p>
-        Use f̃<sub>σ</sub>(v) = E<sub>ξ</sub>[(max(0, v+ξ) + ε)<sup>−1/2</sup>] with ξ ~ N(0, σ²).
+        Use \( \tilde f_\sigma(v) = E_\xi[(\max(0, v+\xi) + \varepsilon)^{-1/2}] \) with \( \xi \sim \mathcal{N}(0, \sigma^2) \).
         Sample ξ in the forward pass. Recovers the entire function in expectation.
         Acts as a natural regularizer.
       </p>
@@ -317,7 +340,7 @@ footer a{color:var(--accent);text-decoration:none}
     <div class="impl-card">
       <h4>Goldschmidt iterations</h4>
       <p>
-        Approximate 1/√v by a fixed number of Newton-style polynomial iterations.
+        Approximate \( 1/\sqrt{v} \) by a fixed number of Newton-style polynomial iterations.
         The N-step sequence is a polynomial (hence entire).
         Hardware-friendly — maps to fused multiply-add.
       </p>
@@ -328,8 +351,8 @@ footer a{color:var(--accent);text-decoration:none}
   <div class="note">
     <b>The Goldschmidt route is particularly appealing</b> because it requires no special functions, is differentiable by default
     (it's just polynomial arithmetic), and can run at fixed latency — ideal for accelerator pipelines.
-    The iteration <code>y ← y · (3 − v·y²) / 2</code> converges quadratically to 1/√v from a reasonable initial guess.
-    With N = 3–4 steps, accuracy is sufficient for FP16/BF16 training.
+    The iteration <span class="math-inline">\( y \leftarrow y(3-vy^2)/2 \)</span> converges quadratically to \( 1/\sqrt{v} \) from a reasonable initial guess.
+    With 3–4 steps, accuracy is sufficient for FP16/BF16 training.
   </div>
 </section>
 
@@ -339,8 +362,8 @@ footer a{color:var(--accent);text-decoration:none}
 <section>
   <h2><span class="n">06</span> The singularity in the complex plane</h2>
   <p class="body">
-    The function 1/√z has a branch cut along the negative real axis, emanating from the branch point at z = 0.
-    Any path in parameter space that causes the variance v to approach zero from any direction hits this
+    The function \( 1/\sqrt{z} \) has a branch cut along the negative real axis, emanating from the branch point at \( z = 0 \).
+    Any path in parameter space that causes the variance \( v \) to approach zero from any direction hits this
     singularity and caps the Taylor convergence radius.
   </p>
 
@@ -348,14 +371,14 @@ footer a{color:var(--accent);text-decoration:none}
     <div class="panel-title">Complex plane: branch cut vs entire function</div>
     <canvas id="c-complex" height="380"></canvas>
     <div class="ctrls">
-      <label>Variance v₀</label>
+      <label>Variance \( v_0 \)</label>
       <input type="range" id="v0" min="0.1" max="3" step="0.05" value="0.8">
       <span class="v" id="v0-v">0.80</span>
     </div>
     <div class="leg">
-      <span><span class="ld" style="background:#B83230"></span>Branch cut of 1/√z (negative real axis)</span>
-      <span><span class="ld" style="background:#B83230"></span>Branch point at z = 0</span>
-      <span><span class="ld" style="background:#1A65A5"></span>Convergence disk — radius = v₀</span>
+      <span><span class="ld" style="background:#B83230"></span>Branch cut of \( 1/\sqrt{z} \) on the negative real axis</span>
+      <span><span class="ld" style="background:#B83230"></span>Branch point at \( z = 0 \)</span>
+      <span><span class="ld" style="background:#1A65A5"></span>Convergence disk with radius \( v_0 \)</span>
       <span><span class="ld" style="background:#534AB7"></span>Smoothed: entire — no finite barrier</span>
     </div>
     <div class="readout" id="readout2"></div>
@@ -364,7 +387,7 @@ footer a{color:var(--accent);text-decoration:none}
   <div class="note good">
     <b>After smoothing, the disk disappears.</b> The Weierstrass-smoothed version is entire — there is no finite
     singularity in the complex plane, so the normalization layer contributes no ghost barrier.
-    The remaining constraint is purely from the softmax (ρ<sub>a</sub> = π/Δ<sub>a</sub>) or from non-entire activations.
+    The remaining constraint is purely from the softmax (\( \rho_a = \pi/\Delta_a \)) or from non-entire activations.
   </div>
 </section>
 
@@ -382,6 +405,20 @@ const DK=matchMedia('(prefers-color-scheme:dark)').matches;
 const GR=DK?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.05)';
 const TC=DK?'rgba(255,255,255,0.45)':'rgba(0,0,0,0.4)';
 const S2PI=Math.sqrt(2*Math.PI);
+
+function typesetMath(elements) {
+  if (!window.MathJax?.typesetPromise) return;
+  const list = Array.isArray(elements) ? elements : [elements];
+  if (window.MathJax.typesetClear) window.MathJax.typesetClear(list);
+  window.MathJax.typesetPromise(list).catch((err) => console.error('MathJax typeset failed', err));
+}
+
+function setMathHTML(id, html) {
+  const el = typeof id === 'string' ? document.getElementById(id) : id;
+  if (!el) return;
+  el.innerHTML = html;
+  typesetMath([el]);
+}
 
 /* ── Numerical integration of the Weierstrass-smoothed 1/√v ── */
 function smoothedInvSqrt(v, sig) {
@@ -446,9 +483,10 @@ function renderPlots() {
 
   const valAt0 = smoothedInvSqrt(0, sig);
   const valAt1 = smoothedInvSqrt(1, sig);
-  document.getElementById('readout').innerHTML =
-    `σ = ${sig.toFixed(2)} | f̃(0) = ${valAt0.toFixed(3)} (bounded!) | f̃(1) = ${valAt1.toFixed(3)} vs 1/√1 = 1.000 | ` +
-    `error at v=1: ${Math.abs(valAt1 - 1).toFixed(4)}`;
+  setMathHTML('readout',
+    String.raw`\(\sigma = ${sig.toFixed(2)}\) | \(\tilde f_\sigma(0) = ${valAt0.toFixed(3)}\) (bounded) | ` +
+    String.raw`\(\tilde f_\sigma(1) = ${valAt1.toFixed(3)}\) vs \(1/\sqrt{1} = 1.000\) | error at \(v = 1\): ${Math.abs(valAt1 - 1).toFixed(4)}`
+  );
 
   if (cFn) cFn.destroy();
   if (cDeriv) cDeriv.destroy();
@@ -549,9 +587,10 @@ renderPlots();
     document.getElementById('v0-v').textContent = v0.toFixed(2);
     const rho = v0; // radius = distance to origin
 
-    document.getElementById('readout2').innerHTML =
-      `Standard 1/√z: branch point at z = 0, convergence radius = v₀ = ${v0.toFixed(2)}. ` +
-      `Smoothed f̃<sub>σ</sub>: entire → no finite radius constraint from normalization.`;
+    setMathHTML('readout2',
+      String.raw`Standard \(1/\sqrt{z}\): branch point at \(z = 0\), convergence radius \(v_0 = ${v0.toFixed(2)}\). ` +
+      String.raw`Smoothed \(\tilde f_\sigma\): entire, so normalization contributes no finite radius constraint.`
+    );
 
     ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 

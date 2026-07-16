@@ -24,3 +24,12 @@ data/raw/
 .pytest_cache/
 cache/
 !assets/*.png
+
+# Local tooling and LaTeX build products
+.claude/
+*.aux
+*.fdb_latexmk
+*.fls
+*.out
+*.synctex.gz
+*.toc
